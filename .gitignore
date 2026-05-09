@@ -59,7 +59,7 @@ build/
 *.markers
 *.location
 *.tree
-
+*.snap
 .metadata/.plugins/com.st.stm32cube.ide.mcu.informationcenter/2.3.200.202507011752
 .metadata/.plugins/org.eclipse.core.resources/.safetable/org.eclipse.core.resources
 UART2_Example/.cproject
