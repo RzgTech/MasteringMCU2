@@ -25,13 +25,25 @@ void HAL_MspDeInit(void)
 
 void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 {
+	GPIO_InitTypeDef gpio_uart;
 	//here we do the low level initialization of the USART2 peripheral
 
 	//1. enable the clock for the USART2 peripheral
 	__HAL_RCC_USART2_CLK_ENABLE();
 	//2. Pin muxing configurations
+	gpio_uart.Pin = GPIO_PIN_2;
+	gpio_uart.Mode = GPIO_MODE_AF_PP;
+	gpio_uart.Speed = GPIO_SPEED_FREQ_LOW;
+	gpio_uart.Pull = GPIO_PULLUP;
+	gpio_uart.Alternate = GPIO_AF7_USART2;  //USART2 TX
+											//you should search in stm32f4xx_hal_gpio_ex.h to
+										   //find the alt. function of the specific mcu (ex. f446re)
+	HAL_GPIO_Init(GPIOA, &gpio_uart);
 
+	gpio_uart.Pin = GPIO_PIN_3; //USART2 RX
+	HAL_GPIO_Init(GPIOA, &gpio_uart);
 	//3. ENable IRQ and set up the priority (NVIC settings)
+
 }
 
 
