@@ -11,14 +11,21 @@ void Error_handler(void);
 
 #include "main.h"
 #include "stm32f4xx_hal.h"
+#include <string.h>
 
 UART_HandleTypeDef huart;
+
+char *message = "This is a test message/r";
 
 int main()
 {
 	HAL_Init();
 	SystemCLockConfig();
 	UART2_Init();
+
+	uint16_t len_of_message = strlen(message);
+	HAL_UART_Transmit(&huart, (uint8_t *)message, len_of_message, HAL_MAX_DELAY);
+
 	return 0;
 }
 
