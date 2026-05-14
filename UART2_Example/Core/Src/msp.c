@@ -17,7 +17,7 @@ void HAL_MspDeInit(void)
 		//2. enable the required system exceptions of the arm cortex mx processor
 		SCB->SHCSR |= (0x7 << 16);  //enabling mem,bus,usage fault exceptions
 		//3. configure the priority for the system exceptions
-		HAL_NVIC_SetPriority(MemoryManagement_IRQn, 0, 0); //setting both the preempt and subpriority = 0
+		HAL_NVIC_SetPriority(MemoryManagement_IRQn, 0, 0); //making both the preempt and subpriority = 0
 		HAL_NVIC_SetPriority(BusFault_IRQn, 0, 0);
 		HAL_NVIC_SetPriority(UsageFault_IRQn, 0, 0);
 }
