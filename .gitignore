@@ -64,3 +64,5 @@ build/
 .metadata/.plugins/org.eclipse.core.resources/.safetable/org.eclipse.core.resources
 UART2_Example/.cproject
 UART2_Example/.mxproject
+*.dat
+*.launch

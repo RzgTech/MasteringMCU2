@@ -15,7 +15,7 @@ void Error_handler(void);
 
 UART_HandleTypeDef huart;
 
-char *message = "This is a test message/r";
+char *message = "This is a test message\r\n";
 
 int main()
 {
@@ -25,6 +25,8 @@ int main()
 
 	uint16_t len_of_message = strlen(message);
 	HAL_UART_Transmit(&huart, (uint8_t *)message, len_of_message, HAL_MAX_DELAY);
+
+	while(1);
 
 	return 0;
 }
