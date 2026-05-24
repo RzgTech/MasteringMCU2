@@ -13,13 +13,17 @@
 void SystemCLockConfig(void);
 
 void Error_handler(void);
+void Timer6_Init(void)
 
+TIM_HandleTypeDef htimer6;  //timer6 is basic timer
 
 
 int main()
 {
 	HAL_Init();
 	SystemCLockConfig();
+	Timer6_Init();
+
 
 	while(1);
 
@@ -28,6 +32,13 @@ int main()
 
 void SystemCLockConfig(void)
 {
+
+}
+
+void Timer6_Init(void)
+{
+	htimer6.Instance = TIM6;
+	htimer6.Init =   //only prescaler and period should be used. other elements of the struct are supported by basic timers
 
 }
 
