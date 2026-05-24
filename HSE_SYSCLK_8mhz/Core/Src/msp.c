@@ -8,7 +8,7 @@
 #include "main.h"
 
 
-void HAL_MspDeInit(void)
+void HAL_MspInit(void)
 {
 	//here we will do low level processor specific inits
 

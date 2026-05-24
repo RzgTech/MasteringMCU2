@@ -8,7 +8,7 @@
 #include "stm32f4xx_hal.h"
 
 
-void HAL_MspDeInit(void)
+void HAL_MspInit(void)
 {
 	//here we will do low level processor specific inits
 
