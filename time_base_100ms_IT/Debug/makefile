@@ -34,34 +34,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := time_base_100ms
+BUILD_ARTIFACT_NAME := time_base_100ms_IT
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-time_base_100ms.elf \
+time_base_100ms_IT.elf \
 
 MAP_FILES += \
-time_base_100ms.map \
+time_base_100ms_IT.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-time_base_100ms.list \
+time_base_100ms_IT.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: time_base_100ms.elf secondary-outputs
+main-build: time_base_100ms_IT.elf secondary-outputs
 
 # Tool invocations
-time_base_100ms.elf time_base_100ms.map: $(OBJS) $(USER_OBJS) C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\time_base_100ms\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "time_base_100ms.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\time_base_100ms\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="time_base_100ms.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+time_base_100ms_IT.elf time_base_100ms_IT.map: $(OBJS) $(USER_OBJS) C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\time_base_100ms_IT\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "time_base_100ms_IT.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\time_base_100ms_IT\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="time_base_100ms_IT.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +70,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-time_base_100ms.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "time_base_100ms.list"
+time_base_100ms_IT.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "time_base_100ms_IT.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) default.size.stdout time_base_100ms.elf time_base_100ms.list time_base_100ms.map
+	-$(RM) default.size.stdout time_base_100ms_IT.elf time_base_100ms_IT.list time_base_100ms_IT.map
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

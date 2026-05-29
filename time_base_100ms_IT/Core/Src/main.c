@@ -24,17 +24,8 @@ int main()
 	SystemCLockConfig();
 	GPIO_Init();
 	Timer6_Init();
-	HAL_TIM_Base_Start(&htimer6);
-	while(1)
-	{
-		//loop until the update event flag is set
-		while (! (TIM6->SR & TIM_SR_UIF)); //when we are out of this loop it means 100 ms is passed
 
-		TIM6->SR = 0;  //clearing UIF bit
-		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-
-	}
-
+	HAL_TIM_Base_Start_IT(&htimer6);
 
 	while(1);
 
@@ -72,6 +63,16 @@ void Timer6_Init(void)
 	}
 
 }
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Instance == TIM6)
+	{
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	}
+
+}
+
 
 void Error_handler(void)
 {
