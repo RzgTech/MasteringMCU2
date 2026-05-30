@@ -27,6 +27,8 @@ int main()
 
 	Timer2_Init();
 
+	LSE_Config();
+
 	while(1);
 
 	return 0;
@@ -39,8 +41,9 @@ void SystemCLockConfig(uint8_t clocl_freq)
 
 	uint32_t FLatency = 0;
 
-	osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+	osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_LSE;
 	osc_init.HSIState = RCC_HSI_ON; //by default it is ON, but anyway, we write it
+	osc_init.LSEState = RCC_LSE_ON;
 	osc_init.HSICalibrationValue = 16;  //by default it is 16, but anyway, we write it
 	osc_init.PLL.PLLSource = RCC_PLLSOURCE_HSI;
 	osc_init.PLL.PLLState = RCC_PLL_ON;
@@ -168,6 +171,7 @@ void Timer2_Init(void)
 
 void LSE_Config(void)
 {
+#if 0
 	RCC_OscInitTypeDef osc_init;
 
 	osc_init.OscillatorType = RCC_OSCILLATORTYPE_LSE;
@@ -177,6 +181,7 @@ void LSE_Config(void)
 	{
 		Error_handler();
 	}
+#endif
 
 	HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_LSE, RCC_MCODIV_1);  //this method configures lse as output on mco1
 																    //inside the method the gpio configurations are done (e.g. PA8 as MCO1)
