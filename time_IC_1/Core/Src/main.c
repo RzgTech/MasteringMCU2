@@ -13,6 +13,7 @@
 void SystemCLockConfig(uint8_t clocl_freq);
 void GPIO_Init(void);
 void Timer2_Init(void);
+void LSE_Config(void);
 void Error_handler(void);
 
 TIM_HandleTypeDef htimer2;  //timer6 is basic timer
@@ -161,6 +162,27 @@ void Timer2_Init(void)
 	{
 		Error_handler();
 	}
+
+
+}
+
+void LSE_Config(void)
+{
+	RCC_OscInitTypeDef osc_init;
+
+	osc_init.OscillatorType = RCC_OSCILLATORTYPE_LSE;
+	osc_init.LSEState = RCC_LSE_ON;
+
+	if (HAL_RCC_OscConfig(&osc_init)!= HAL_OK)
+	{
+		Error_handler();
+	}
+
+	HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_LSE, RCC_MCODIV_1);  //this method configures lse as output on mco1
+																    //inside the method the gpio configurations are done (e.g. PA8 as MCO1)
+
+
+
 
 
 }
