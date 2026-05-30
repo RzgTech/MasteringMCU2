@@ -22,4 +22,25 @@ void HAL_MspInit(void)
 		HAL_NVIC_SetPriority(UsageFault_IRQn, 0, 0);
 }
 
+void HAL_TIM_IC_MspInit(TIM_HandleTypeDef *htim)
+{
+	//enabling the clock for TIM2 and gpioA
+	__HAL_RCC_TIM2_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+
+	//configuring GPIO to be used as TIM2 input channel
+	GPIO_InitTypeDef tim2ch1_gpio;
+	tim2ch1_gpio.Mode = GPIO_MODE_AF_PP;
+	tim2ch1_gpio.Alternate = GPIO_AF1_TIM2; //from datasheet >> table 11 ->TIM2_CH1
+	tim2ch1_gpio.Pin = GPIO_PIN_0;
+
+	HAL_GPIO_Init(GPIOA, &tim2ch1_gpio);
+
+	//setting the priority
+	HAL_NVIC_SetPriority(TIM2_IRQn, 15, 0);
+
+	//enabling the interrupt
+	HAL_NVIC_EnableIRQ(TIM2_IRQn);
+}
+
 

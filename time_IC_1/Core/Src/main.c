@@ -137,6 +137,10 @@ void GPIO_Init(void)
 
 void Timer2_Init(void)
 {
+	TIM_IC_InitTypeDef timer2IC_Config;
+
+	//initializing time base
+
 	htimer2.Instance = TIM2;
 	htimer2.Init.Prescaler = 1;
 	htimer2.Init.Period = 0xFFFFFFFF;	//RM >> 17.4 -> 32-bit counter
@@ -146,6 +150,19 @@ void Timer2_Init(void)
 	{
 		Error_handler();
 	}
+
+	//configuring input channel
+
+	timer2IC_Config.ICFilter = 0;
+	timer2IC_Config.ICPolarity = TIM_ICPOLARITY_RISING;
+	timer2IC_Config.ICPrescaler = TIM_ICPSC_DIV1;
+	timer2IC_Config.ICSelection = TIM_ICSELECTION_DIRECTTI;
+	if (HAL_TIM_IC_ConfigChannel(&htimer2, &timer2IC_Config, TIM_CHANNEL_1) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+
 }
 
 void Error_handler(void)
