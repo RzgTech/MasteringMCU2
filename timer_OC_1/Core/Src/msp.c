@@ -45,3 +45,53 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 	HAL_NVIC_SetPriority(USART2_IRQn, 15, 0);
 
 }
+
+void HAL_TIM_OC_MspInit(TIM_HandleTypeDef *htim)
+{
+	//enabling the clock for TIM2 and gpioA
+	__HAL_RCC_TIM2_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+
+	//configuring GPIO to be used as TIM2 output channel
+	/*
+	 * datasheet >> table 11:
+	 * PA0 -> TIM2_CH1
+	 * PA1 -> TIM2_CH2
+	 * PA2 -> TIM2_CH3 ----> cannot be used bcs it is used by UART2 instead: PB10
+	 * PA3 -> TIM2_CH4 ----> cannot be used bcs it is used by UART2 instead: PB2
+	 */
+
+	GPIO_InitTypeDef tim2ch1_gpio;
+	tim2ch1_gpio.Mode = GPIO_MODE_AF_PP;
+	tim2ch1_gpio.Alternate = GPIO_AF1_TIM2; //from datasheet >> table 11 ->TIM2_CH1
+	tim2ch1_gpio.Pull = GPIO_NOPULL;
+	tim2ch1_gpio.Speed = GPIO_SPEED_FREQ_LOW;
+	tim2ch1_gpio.Pin = GPIO_PIN_0;
+
+	HAL_GPIO_Init(GPIOA, &tim2ch1_gpio);
+
+	tim2ch1_gpio.Pin = GPIO_PIN_1;
+
+	HAL_GPIO_Init(GPIOA, &tim2ch1_gpio);
+
+	tim2ch1_gpio.Pin = GPIO_PIN_10;
+
+	HAL_GPIO_Init(GPIOB, &tim2ch1_gpio);
+
+	tim2ch1_gpio.Pin = GPIO_PIN_3;
+
+	HAL_GPIO_Init(GPIOB, &tim2ch1_gpio);
+
+	//setting the priority
+	HAL_NVIC_SetPriority(TIM2_IRQn, 15, 0);
+
+	//enabling the interrupt
+	HAL_NVIC_EnableIRQ(TIM2_IRQn);
+
+
+}
+
+
+
+
