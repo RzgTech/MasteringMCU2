@@ -79,7 +79,7 @@ void HAL_TIM_OC_MspInit(TIM_HandleTypeDef *htim)
 
 	HAL_GPIO_Init(GPIOB, &tim2ch1_gpio);
 
-	tim2ch1_gpio.Pin = GPIO_PIN_3;
+	tim2ch1_gpio.Pin = GPIO_PIN_2;
 
 	HAL_GPIO_Init(GPIOB, &tim2ch1_gpio);
 

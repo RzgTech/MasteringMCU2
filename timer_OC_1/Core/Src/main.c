@@ -25,6 +25,8 @@ uint32_t pulse2_value = 12500; //to produce 1000Hz
 uint32_t pulse3_value = 6250; //to produce 2000Hz
 uint32_t pulse4_value = 3125; //to produce 4000Hz
 
+uint32_t ccr_content;
+
 
 int main()
 {
@@ -34,6 +36,26 @@ int main()
 
 	UART2_Init();
 	Timer2_Init();
+
+	if (HAL_TIM_OC_Start_IT(&htimer2, TIM_CHANNEL_1) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	if (HAL_TIM_OC_Start_IT(&htimer2, TIM_CHANNEL_2) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	if (HAL_TIM_OC_Start_IT(&htimer2, TIM_CHANNEL_3) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	if (HAL_TIM_OC_Start_IT(&htimer2, TIM_CHANNEL_4) != HAL_OK)
+	{
+		Error_handler();
+	}
 
 	while(1);
 
@@ -188,6 +210,32 @@ void Timer2_Init(void)
 	}
 }
 
+void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
+	{
+		ccr_content = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+		__HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_1, ccr_content + pulse1_value);
+	}
+
+	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2)
+	{
+		ccr_content = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_2);
+		__HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, ccr_content + pulse2_value);
+	}
+
+	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_3)
+	{
+		ccr_content = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_3);
+		__HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_3, ccr_content + pulse3_value);
+	}
+
+	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_4)
+	{
+		ccr_content = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_4);
+		__HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_4, ccr_content + pulse4_value);
+	}
+}
 
 void UART2_Init(void)
 {
