@@ -20,7 +20,7 @@ void Error_handler(void);
 UART_HandleTypeDef huart;  //UART2 handle
 TIM_HandleTypeDef htimer2;  //timer2 is general purpose timer
 
-uint32_t pulse1_value = 25000; //to produce 500Hz  (timer_clk_freq/(desired_freq*2)) //slide 85
+uint32_t pulse1_value = 12500000; //to produce 1Hz  (timer_clk_freq/(desired_freq*2)) //slide 85
 uint32_t pulse2_value = 12500; //to produce 1000Hz
 uint32_t pulse3_value = 6250; //to produce 2000Hz
 uint32_t pulse4_value = 3125; //to produce 4000Hz
@@ -36,11 +36,6 @@ int main()
 
 	UART2_Init();
 	Timer2_Init();
-
-	uint32_t pclk1 = HAL_RCC_GetPCLK1Freq();
-	char msg[100];
-	sprintf(msg, "Frequency: %ld Hz\r\n", pclk1);
-	HAL_UART_Transmit(&huart, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 
 	if (HAL_TIM_OC_Start_IT(&htimer2, TIM_CHANNEL_1) != HAL_OK)
 	{
