@@ -225,7 +225,7 @@ void LSE_Config(void)
 	}
 #endif
 
-	HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_LSE, RCC_MCODIV_1);  //this method configures lse as output on mco1
+	HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSI, RCC_MCODIV_4);  //this method configures lse as output on mco1
 																    //inside the method the gpio configurations are done (e.g. PA8 as MCO1)
 }
 
