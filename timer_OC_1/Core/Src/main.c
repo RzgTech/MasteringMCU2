@@ -20,6 +20,11 @@ void Error_handler(void);
 UART_HandleTypeDef huart;  //UART2 handle
 TIM_HandleTypeDef htimer2;  //timer2 is general purpose timer
 
+uint32_t pulse1_value = 25000; //to produce 500Hz  (timer_clk_freq/(desired_freq*2)) //slide 85
+uint32_t pulse2_value = 12500; //to produce 1000Hz
+uint32_t pulse3_value = 6250; //to produce 2000Hz
+uint32_t pulse4_value = 3125; //to produce 4000Hz
+
 
 int main()
 {
@@ -155,7 +160,32 @@ void Timer2_Init(void)
 
 	timer2OC_Config.OCMode = TIM_OCMODE_TOGGLE;  //slide 84
 	timer2OC_Config.OCPolarity = TIM_OCPOLARITY_HIGH;  //RM >> figure 185: 0: no invertion (TIM_OCPOLARITY_HIGH), 1: invertred signal
+	timer2OC_Config.Pulse = pulse1_value;
 
+	if (HAL_TIM_OC_ConfigChannel(&htimer2, &timer2OC_Config, TIM_CHANNEL_1))
+	{
+		Error_handler();
+	}
+	timer2OC_Config.Pulse = pulse2_value;
+
+	if (HAL_TIM_OC_ConfigChannel(&htimer2, &timer2OC_Config, TIM_CHANNEL_2))
+	{
+		Error_handler();
+	}
+
+	timer2OC_Config.Pulse = pulse3_value;
+
+	if (HAL_TIM_OC_ConfigChannel(&htimer2, &timer2OC_Config, TIM_CHANNEL_3))
+	{
+		Error_handler();
+	}
+
+	timer2OC_Config.Pulse = pulse4_value;
+
+	if (HAL_TIM_OC_ConfigChannel(&htimer2, &timer2OC_Config, TIM_CHANNEL_4))
+	{
+		Error_handler();
+	}
 }
 
 
