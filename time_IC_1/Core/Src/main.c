@@ -82,11 +82,12 @@ void SystemCLockConfig(uint8_t clocl_freq)
 
 	uint32_t FLatency = 0;
 
-	osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_LSE;
+	osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_HSE;
 	osc_init.HSIState = RCC_HSI_ON; //by default it is ON, but anyway, we write it
 	osc_init.LSEState = RCC_LSE_ON;
+	osc_init.HSEState = RCC_HSE_BYPASS;
 	osc_init.HSICalibrationValue = 16;  //by default it is 16, but anyway, we write it
-	osc_init.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+	osc_init.PLL.PLLSource = RCC_PLLSOURCE_HSE;
 	osc_init.PLL.PLLState = RCC_PLL_ON;
 
 	switch (clocl_freq)
