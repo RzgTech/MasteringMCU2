@@ -37,6 +37,11 @@ int main()
 	UART2_Init();
 	Timer2_Init();
 
+	uint32_t pclk1 = HAL_RCC_GetPCLK1Freq();
+	char msg[100];
+	sprintf(msg, "Frequency: %ld Hz\r\n", pclk1);
+	HAL_UART_Transmit(&huart, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
 	if (HAL_TIM_OC_Start_IT(&htimer2, TIM_CHANNEL_1) != HAL_OK)
 	{
 		Error_handler();
@@ -81,9 +86,9 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 	{
 	case SYS_CLOCK_FREQ_50_MHZ:
 	{
-		osc_init.PLL.PLLM = 16;
-		osc_init.PLL.PLLN = 100;
-		osc_init.PLL.PLLP = 2;
+		osc_init.PLL.PLLM = 4;
+		osc_init.PLL.PLLN = 50;
+		osc_init.PLL.PLLP = RCC_PLLP_DIV2;
 		osc_init.PLL.PLLQ = 2; //default value
 		osc_init.PLL.PLLR = 2; //default value
 
@@ -99,9 +104,9 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 	}
 	case SYS_CLOCK_FREQ_84_MHZ:
 	{
-		osc_init.PLL.PLLM = 16;
-		osc_init.PLL.PLLN = 168;
-		osc_init.PLL.PLLP = 2;
+		osc_init.PLL.PLLM = 4;
+		osc_init.PLL.PLLN = 84;
+		osc_init.PLL.PLLP = RCC_PLLP_DIV2;
 		osc_init.PLL.PLLQ = 2; //default value
 		osc_init.PLL.PLLR = 2; //default value
 
@@ -117,9 +122,9 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 	}
 	case SYS_CLOCK_FREQ_120_MHZ:
 	{
-		osc_init.PLL.PLLM = 16;
-		osc_init.PLL.PLLN = 240;
-		osc_init.PLL.PLLP = 2;
+		osc_init.PLL.PLLM = 4;
+		osc_init.PLL.PLLN = 120;
+		osc_init.PLL.PLLP = RCC_PLLP_DIV2;
 		osc_init.PLL.PLLQ = 2; //default value
 		osc_init.PLL.PLLR = 2; //default value
 
