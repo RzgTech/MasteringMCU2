@@ -6,31 +6,72 @@
  */
 
 #include "main.h"
-#include "stm32f4xx_hal.h"
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 
 void SystemCLockConfig(uint8_t clocl_freq);
 void GPIO_Init(void);
 void Timer2_Init(void);
 void LSE_Config(void);
+void UART2_Init(void);
 void Error_handler(void);
 
-TIM_HandleTypeDef htimer2;  //timer6 is basic timer
+UART_HandleTypeDef huart;  //UART2 handle
+TIM_HandleTypeDef htimer2;  //timer2 is general purpose timer
 
+uint32_t capture_values[2] = {0};  //to store the captured values of the input signal 
+uint8_t is_capture_done = FALSE;  //flag to indicate that the capture is done and we can calculate the frequency
+uint8_t counter = 1;
+
+char msg[100];  //to store the message to be sent over UART
 
 int main()
 {
+	uint32_t diff = 0;  //to store the difference between the two captures (in timer counts)
+	double timer2_cnt_freq = 0;
+	double timer2_cnt_resolution = 0;
+	double user_signal_time_period = 0;
+	double user_signal_frequency = 0;
+
 	HAL_Init();
 	SystemCLockConfig(SYS_CLOCK_FREQ_50_MHZ);
 	GPIO_Init();
 
+	UART2_Init();
 	Timer2_Init();
 
 	LSE_Config();
 
-	while(1);
+	HAL_TIM_IC_Start_IT(&htimer2, TIM_CHANNEL_1);
 
+	while(1)
+	{
+		if (is_capture_done == TRUE)
+		{
+
+			if (capture_values[1] > capture_values[0])
+			{
+				diff = capture_values[1] - capture_values[0];
+			}
+			else if (capture_values[1] < capture_values[0])  //this is the case when the counter overflows between the two captures
+			{
+				diff = (0xFFFFFFFF - capture_values[0]) + capture_values[1];
+			}
+
+
+			timer2_cnt_freq = (HAL_RCC_GetPCLK1Freq()*2) / (htimer2.Init.Prescaler + 1);  //calculating the timer counter clock frequency (in Hz)
+			timer2_cnt_resolution = 1 / timer2_cnt_freq;  //calculating the timer tick time (in seconds)
+			user_signal_time_period = diff * timer2_cnt_resolution;
+
+			user_signal_frequency = 1 / user_signal_time_period;  //calculating the frequency (in Hz)
+
+			sprintf(msg, "Frequency: %f Hz\r\n", user_signal_frequency);
+			HAL_UART_Transmit(&huart, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
+			is_capture_done = FALSE;  //resetting the flag for the next captures
+		}
+	}
 	return 0;
 }
 
@@ -185,15 +226,47 @@ void LSE_Config(void)
 
 	HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_LSE, RCC_MCODIV_1);  //this method configures lse as output on mco1
 																    //inside the method the gpio configurations are done (e.g. PA8 as MCO1)
+}
 
-
-
-
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+	if (is_capture_done == FALSE)
+	{
+		if (counter == 1)
+		{
+			capture_values[0] = __HAL_TIM_GET_COMPARE(htim, TIM_CHANNEL_1);
+			counter++;
+		}
+		else if (counter == 2)
+		{
+			capture_values[1] = __HAL_TIM_GET_COMPARE(htim, TIM_CHANNEL_1);
+			counter = 1;
+			is_capture_done = TRUE;
+		}
+	}
 
 }
+
+void UART2_Init(void)
+{
+	huart.Instance = USART2;
+	huart.Init.BaudRate = 115200;
+	huart.Init.WordLength = UART_WORDLENGTH_8B;
+	huart.Init.StopBits = UART_STOPBITS_1;
+	huart.Init.Parity = UART_PARITY_NONE;
+	huart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	huart.Init.Mode = UART_MODE_TX_RX;
+
+	if (HAL_UART_Init(&huart) != HAL_OK)
+	{
+		//there is a problem
+		Error_handler();
+	}
+}
+
+
 
 void Error_handler(void)
 {
 	while(1);
 }
-
