@@ -146,14 +146,20 @@ void GPIO_Init(void)
 void Timer2_Init(void)
 {
 
+	TIM_OC_InitTypeDef tim2pwm_config;
+
 	htimer2.Instance = TIM2;
-	htimer2.Init.Period = 0xFFFFFFFF;
-	htimer2.Init.Prescaler = 1;
+	htimer2.Init.Period = 10000-1;
+	htimer2.Init.Prescaler = 4999;
 
 	if (HAL_TIM_PWM_Init(&htimer2) != HAL_OK)
 	{
 		Error_handler();
 	}
+
+	tim2pwm_config.OCMode = TIM_OCMODE_PWM1;
+	tim2pwm_config.OCPolarity = TIM_OCPOLARITY_HIGH;
+
 
 }
 
