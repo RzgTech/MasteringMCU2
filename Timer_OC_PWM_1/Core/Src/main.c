@@ -146,6 +146,15 @@ void GPIO_Init(void)
 void Timer2_Init(void)
 {
 
+	htimer2.Instance = TIM2;
+	htimer2.Init.Period = 0xFFFFFFFF;
+	htimer2.Init.Prescaler = 1;
+
+	if (HAL_TIM_PWM_Init(&htimer2) != HAL_OK)
+	{
+		Error_handler();
+	}
+
 }
 
 void UART2_Init(void)
