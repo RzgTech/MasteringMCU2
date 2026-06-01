@@ -159,6 +159,30 @@ void Timer2_Init(void)
 
 	tim2pwm_config.OCMode = TIM_OCMODE_PWM1;
 	tim2pwm_config.OCPolarity = TIM_OCPOLARITY_HIGH;
+	tim2pwm_config.Pulse = (htimer2.Init.Period * 25)/100;
+	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_1) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	tim2pwm_config.Pulse = (htimer2.Init.Period * 45)/100;
+	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_2) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	tim2pwm_config.Pulse = (htimer2.Init.Period * 75)/100;
+	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_3) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	tim2pwm_config.Pulse = (htimer2.Init.Period * 90)/100;
+	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_4) != HAL_OK)
+	{
+		Error_handler();
+	}
+
 
 
 }
