@@ -31,6 +31,26 @@ int main()
 	UART2_Init();
 	Timer2_Init();
 
+	if (HAL_TIM_PWM_Start(&htimer2, TIM_CHANNEL_1) != HAL_OK) //we dont use interrupt for this proj bcs we dont need to update anything after each event
+	{
+		Error_handler();
+	}
+
+	if (HAL_TIM_PWM_Start(&htimer2, TIM_CHANNEL_2) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	if (HAL_TIM_PWM_Start(&htimer2, TIM_CHANNEL_3) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	if (HAL_TIM_PWM_Start(&htimer2, TIM_CHANNEL_4) != HAL_OK)
+	{
+		Error_handler();
+	}
+
 
 	while(1);
 

@@ -47,7 +47,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
 }
 
-void HAL_TIM_OC_MspInit(TIM_HandleTypeDef *htim)
+void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 {
 	//enabling the clock for TIM2 and gpioA
 	__HAL_RCC_TIM2_CLK_ENABLE();
