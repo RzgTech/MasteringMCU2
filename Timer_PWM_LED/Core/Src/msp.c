@@ -68,21 +68,9 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 	tim2ch1_gpio.Alternate = GPIO_AF1_TIM2; //from datasheet >> table 11 ->TIM2_CH1
 	tim2ch1_gpio.Pull = GPIO_NOPULL;
 	tim2ch1_gpio.Speed = GPIO_SPEED_FREQ_LOW;
-	tim2ch1_gpio.Pin = GPIO_PIN_5;
+	tim2ch1_gpio.Pin = GPIO_PIN_0;
 
 	HAL_GPIO_Init(GPIOA, &tim2ch1_gpio);
-
-	tim2ch1_gpio.Pin = GPIO_PIN_1;
-
-	HAL_GPIO_Init(GPIOA, &tim2ch1_gpio);
-
-	tim2ch1_gpio.Pin = GPIO_PIN_10;
-
-	HAL_GPIO_Init(GPIOB, &tim2ch1_gpio);
-
-	tim2ch1_gpio.Pin = GPIO_PIN_2;
-
-	HAL_GPIO_Init(GPIOB, &tim2ch1_gpio);
 
 	//setting the priority
 	HAL_NVIC_SetPriority(TIM2_IRQn, 15, 0);

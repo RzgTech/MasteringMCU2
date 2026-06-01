@@ -24,6 +24,7 @@ TIM_HandleTypeDef htimer2;  //timer2 is general purpose timer
 
 int main()
 {
+	uint16_t brightness = 0;
 	HAL_Init();
 	SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);
 	GPIO_Init();
@@ -37,7 +38,25 @@ int main()
 	}
 
 
-	while(1);
+	while(1)
+	{
+		while (brightness < htimer2.Init.Period)
+		{
+			brightness += 1;
+			__HAL_TIM_SET_COMPARE(&htimer2, TIM_CHANNEL_1, brightness); //we use this to directly change the pulse value (reminder: the value inside ccr register is the pulse value)
+																		//So, when the counter reaches the ccr value, it toggles the signal and since after each period we
+																	    //increase the ccr (pulse) value, we are actually increasing gradually the duty cycle.
+																		//I think we did not increase the pulse value through the struct bcs after each increase we have to config the channel
+			HAL_Delay(1);  //we set the delay of 1ms bcs the processor is running much faster then the timer and we have to slow down the processor for generating the signal at the next period
+		}
+
+		while (brightness > 0)
+		{
+			brightness -= 1;
+			__HAL_TIM_SET_COMPARE(&htimer2, TIM_CHANNEL_1, brightness); //we use this to directly change the pulse value (reminder: the value inside ccr register is the pulse value)
+			HAL_Delay(1);
+		}
+	}
 
 	return 0;
 }
@@ -166,7 +185,7 @@ void Timer2_Init(void)
 
 	tim2pwm_config.OCMode = TIM_OCMODE_PWM1;
 	tim2pwm_config.OCPolarity = TIM_OCPOLARITY_HIGH;
-	tim2pwm_config.Pulse = (htimer2.Init.Period * 25)/100;  //duty cycle 25%
+	tim2pwm_config.Pulse = 0;  //duty cycle 25%
 	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_1) != HAL_OK)
 	{
 		Error_handler();
