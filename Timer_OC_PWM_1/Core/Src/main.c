@@ -169,35 +169,37 @@ void Timer2_Init(void)
 	TIM_OC_InitTypeDef tim2pwm_config;
 
 	htimer2.Instance = TIM2;
-	htimer2.Init.Period = 10000-1;
-	htimer2.Init.Prescaler = 4999;
+	htimer2.Init.Period = 1000-1;
+	htimer2.Init.Prescaler = 49;
 
 	if (HAL_TIM_PWM_Init(&htimer2) != HAL_OK)
 	{
 		Error_handler();
 	}
 
+	memset(&tim2pwm_config, 0, sizeof(tim2pwm_config)); //initializing all the elements of the structure with 0
+
 	tim2pwm_config.OCMode = TIM_OCMODE_PWM1;
 	tim2pwm_config.OCPolarity = TIM_OCPOLARITY_HIGH;
-	tim2pwm_config.Pulse = (htimer2.Init.Period * 25)/100;
+	tim2pwm_config.Pulse = (htimer2.Init.Period * 25)/100;  //duty cycle 25%
 	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_1) != HAL_OK)
 	{
 		Error_handler();
 	}
 
-	tim2pwm_config.Pulse = (htimer2.Init.Period * 45)/100;
+	tim2pwm_config.Pulse = (htimer2.Init.Period * 45)/100;  //duty cycle 45%
 	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_2) != HAL_OK)
 	{
 		Error_handler();
 	}
 
-	tim2pwm_config.Pulse = (htimer2.Init.Period * 75)/100;
+	tim2pwm_config.Pulse = (htimer2.Init.Period * 75)/100;  //duty cycle 75%
 	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_3) != HAL_OK)
 	{
 		Error_handler();
 	}
 
-	tim2pwm_config.Pulse = (htimer2.Init.Period * 90)/100;
+	tim2pwm_config.Pulse = (htimer2.Init.Period * 90)/100;   //duty cycle 90%
 	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_4) != HAL_OK)
 	{
 		Error_handler();
