@@ -14,9 +14,12 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq);
 void GPIO_Init(void);
 void UART2_Init(void);
 void CAN1_Init(void);
+void CAN1_Tx(void);
 void Error_handler(void);
 
 UART_HandleTypeDef huart;  //UART2 handle
+char msg[100];
+
 CAN_HandleTypeDef hcan1;
 
 int main()
@@ -28,6 +31,8 @@ int main()
 	UART2_Init();
 
 	CAN1_Init();
+
+	CAN1_Tx();
 
 
 	while(1);
@@ -163,7 +168,7 @@ void CAN1_Init(void)
 	hcan1.Instance = CAN1;
 	hcan1.Init.Mode = CAN_MODE_LOOPBACK;
 	hcan1.Init.ReceiveFifoLocked = DISABLE;
-	hcan1.Init.AutoRetransmission = ENABLE;
+	hcan1.Init.AutoRetransmission = ENABLE;  //trasmission will be retied if it fails (if BUS was not idle)
 	hcan1.Init.AutoBusOff = DISABLE;
 	hcan1.Init.AutoWakeUp = DISABLE;  //for low power mode
 	hcan1.Init.TimeTriggeredMode = DISABLE;
@@ -180,6 +185,27 @@ void CAN1_Init(void)
 		Error_handler();
 	}
 
+}
+
+void CAN1_Tx(void)
+{
+	uint8_t can_msg[5] = {'H', 'E', 'L', 'L', 'O'};
+
+	uint32_t TxMailbox;
+	CAN_TxHeaderTypeDef TxHeader;
+	TxHeader.IDE = CAN_ID_STD;  //using standard identifier
+	TxHeader.StdId = 0x65D;  //sth arbitrary
+	TxHeader.DLC = 5;
+	TxHeader.RTR = CAN_RTR_DATA;
+	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, can_msg, &TxMailbox) != HAL_OK) //we pass TxMailbox to this API to get the mailbox for transmission
+	{
+		Error_handler();
+	}
+
+	while (HAL_CAN_IsTxMessagePending(&hcan1, TxMailbox));
+
+	sprintf(msg, "Message Transmitted\r\n");
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 }
 
 void Error_handler(void)
