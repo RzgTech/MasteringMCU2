@@ -32,6 +32,11 @@ int main()
 
 	CAN1_Init();
 
+	if (HAL_CAN_Start(&hcan1) != HAL_OK)  //based on slide slide 165 (or RM>>30.4.3) we have to change the CAN controller operating mode from Initialization to Normal
+	{									  //in order to make it participate in tx and rx activities. O.W txing wont work
+		Error_handler();
+	}
+
 	CAN1_Tx();
 
 
