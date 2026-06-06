@@ -13,9 +13,11 @@
 void SystemCLock_Config_HSE(uint8_t clocl_freq);
 void GPIO_Init(void);
 void UART2_Init(void);
+void CAN1_Init(void);
 void Error_handler(void);
 
 UART_HandleTypeDef huart;  //UART2 handle
+CAN_HandleTypeDef hcan1;
 
 int main()
 {
@@ -24,6 +26,8 @@ int main()
 	GPIO_Init();
 
 	UART2_Init();
+
+	CAN1_Init();
 
 
 	while(1);
@@ -137,52 +141,6 @@ void GPIO_Init(void)
 
 }
 
-void Timer2_Init(void)
-{
-
-	TIM_OC_InitTypeDef tim2pwm_config;
-
-	htimer2.Instance = TIM2;
-	htimer2.Init.Period = 1000-1;
-	htimer2.Init.Prescaler = 49;
-
-	if (HAL_TIM_PWM_Init(&htimer2) != HAL_OK)
-	{
-		Error_handler();
-	}
-
-	memset(&tim2pwm_config, 0, sizeof(tim2pwm_config)); //initializing all the elements of the structure with 0
-
-	tim2pwm_config.OCMode = TIM_OCMODE_PWM1;
-	tim2pwm_config.OCPolarity = TIM_OCPOLARITY_HIGH;
-	tim2pwm_config.Pulse = (htimer2.Init.Period * 25)/100;  //duty cycle 25%
-	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_1) != HAL_OK)
-	{
-		Error_handler();
-	}
-
-	tim2pwm_config.Pulse = (htimer2.Init.Period * 45)/100;  //duty cycle 45%
-	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_2) != HAL_OK)
-	{
-		Error_handler();
-	}
-
-	tim2pwm_config.Pulse = (htimer2.Init.Period * 75)/100;  //duty cycle 75%
-	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_3) != HAL_OK)
-	{
-		Error_handler();
-	}
-
-	tim2pwm_config.Pulse = (htimer2.Init.Period * 90)/100;   //duty cycle 90%
-	if (HAL_TIM_PWM_ConfigChannel(&htimer2, &tim2pwm_config, TIM_CHANNEL_4) != HAL_OK)
-	{
-		Error_handler();
-	}
-
-
-
-}
-
 void UART2_Init(void)
 {
 	huart.Instance = USART2;
@@ -198,6 +156,30 @@ void UART2_Init(void)
 		//there is a problem
 		Error_handler();
 	}
+}
+
+void CAN1_Init(void)
+{
+	hcan1.Instance = CAN1;
+	hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+	hcan1.Init.ReceiveFifoLocked = DISABLE;
+	hcan1.Init.AutoRetransmission = ENABLE;
+	hcan1.Init.AutoBusOff = DISABLE;
+	hcan1.Init.AutoWakeUp = DISABLE;  //for low power mode
+	hcan1.Init.TimeTriggeredMode = DISABLE;
+	hcan1.Init.TransmitFifoPriority = DISABLE;
+
+	//bit timing settings -> based on http://www.bittiming.can-wiki.info/ , clock rate 25 MHz
+	hcan1.Init.Prescaler = 5;
+	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+	hcan1.Init.TimeSeg1 = CAN_BS1_8TQ;
+	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+
+	if (HAL_CAN_Init(&hcan1) != HAL_OK)
+	{
+		Error_handler();
+	}
+
 }
 
 void Error_handler(void)
