@@ -14,13 +14,11 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq);
 void GPIO_Init(void);
 void UART2_Init(void);
 void CAN1_Init(void);
-void CAN1_Tx(void);
-void CAN1_Rx(void);
+void CAN1_Tx_IT(void);
 void CAN_Filter_Config(void);
 void Error_handler(void);
 
 UART_HandleTypeDef huart;  //UART2 handle
-char msg[100];
 
 CAN_HandleTypeDef hcan1;
 
@@ -47,9 +45,7 @@ int main()
 		Error_handler();
 	}
 
-	CAN1_Tx();
-
-	CAN1_Rx();
+	CAN1_Tx_IT();
 
 
 	while(1);
@@ -204,7 +200,7 @@ void CAN1_Init(void)
 
 }
 
-void CAN1_Tx(void)
+void CAN1_Tx_IT(void)
 {
 	uint8_t can_msg[5] = {'H', 'E', 'L', 'L', 'O'};
 
@@ -218,30 +214,11 @@ void CAN1_Tx(void)
 	{
 		Error_handler();
 	}
-
-	while (HAL_CAN_IsTxMessagePending(&hcan1, TxMailbox));
-
-	sprintf(msg, "Message Transmitted\r\n");
-	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 }
 
 void CAN1_Rx(void)
 {
-	uint8_t rcvd_msg[5];
-	CAN_RxHeaderTypeDef RxHeader;
 
-	char msg[50];
-
-	//we are waiting for at least one message in to the RX FIFO0
-	while (! HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0));
-
-	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, rcvd_msg) != HAL_OK)
-	{
-		Error_handler();
-	}
-
-	sprintf(msg, "Message received: %s\r\n", rcvd_msg);
-	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 }
 
 void CAN_Filter_Config(void)
@@ -269,26 +246,51 @@ void CAN_Filter_Config(void)
 
 void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan)
 {
+	char msg[100];
+	sprintf(msg, "Message Transmitted: M0\r\n");
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
 }
 
 void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef *hcan)
 {
+	char msg[100];
+	sprintf(msg, "Message Transmitted: M1\r\n");
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
 }
 
 void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef *hcan)
 {
+	char msg[100];
+	sprintf(msg, "Message Transmitted:M2\r\n");
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
 }
 
-void HAL_CAN_RxFifo0FullCallback(CAN_HandleTypeDef *hcan)
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
+	uint8_t rcvd_msg[5];
+	CAN_RxHeaderTypeDef RxHeader; //It is not mandatory to initialize RxHeader. Since all the members of this structure will be filled by the Rx API.
+
+	char msg[50];
+
+	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, rcvd_msg) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	sprintf(msg, "Message received: %s\r\n", rcvd_msg);
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
 }
 
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan)
 {
+	char msg[50];
+
+	sprintf(msg, "CAN Error Detected\r\n");
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
 }
 
