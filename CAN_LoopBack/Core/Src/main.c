@@ -16,6 +16,7 @@ void UART2_Init(void);
 void CAN1_Init(void);
 void CAN1_Tx(void);
 void CAN1_Rx(void);
+void CAN_Filter_Config(void);
 void Error_handler(void);
 
 UART_HandleTypeDef huart;  //UART2 handle
@@ -32,6 +33,8 @@ int main()
 	UART2_Init();
 
 	CAN1_Init();
+
+	CAN_Filter_Config();
 
 	if (HAL_CAN_Start(&hcan1) != HAL_OK)  //based on slide slide 165 (or RM>>30.4.3) we have to change the CAN controller operating mode from Initialization to Normal
 	{									  //in order to make it participate in tx and rx activities. O.W txing wont work
@@ -233,6 +236,29 @@ void CAN1_Rx(void)
 
 	sprintf(msg, "Message received: %s\r\n", rcvd_msg);
 	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+}
+
+void CAN_Filter_Config(void)
+{
+	//in this exercise, we will accept all the frames
+	CAN_FilterTypeDef can1_filter_config;
+
+	can1_filter_config.FilterActivation = CAN_FILTER_ENABLE;
+	can1_filter_config.FilterBank = 0;  //Specifies the filter bank which will be initialized.
+										//For single CAN instance(14 dedicated filter banks),
+	can1_filter_config.FilterFIFOAssignment = CAN_FILTER_FIFO0; //which FIFO to be used for the message after passing the filter
+	can1_filter_config.FilterIdHigh = 0x0000;
+	can1_filter_config.FilterIdLow = 0x0000;
+	can1_filter_config.FilterMaskIdHigh = 0x0000;
+	can1_filter_config.FilterMaskIdLow = 0x0000;
+	can1_filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
+	can1_filter_config.FilterScale = CAN_FILTERSCALE_32BIT; //RM>>30.7.4
+
+	if (HAL_CAN_ConfigFilter(&hcan1, &can1_filter_config) != HAL_OK)
+	{
+		Error_handler();
+	}
+
 }
 
 void Error_handler(void)
