@@ -15,6 +15,7 @@ void GPIO_Init(void);
 void UART2_Init(void);
 void CAN1_Init(void);
 void CAN1_Tx(void);
+void CAN1_Rx(void);
 void Error_handler(void);
 
 UART_HandleTypeDef huart;  //UART2 handle
@@ -38,6 +39,8 @@ int main()
 	}
 
 	CAN1_Tx();
+
+	CAN1_Rx();
 
 
 	while(1);
@@ -173,7 +176,7 @@ void CAN1_Init(void)
 	hcan1.Instance = CAN1;
 	hcan1.Init.Mode = CAN_MODE_LOOPBACK;
 	hcan1.Init.ReceiveFifoLocked = DISABLE;
-	hcan1.Init.AutoRetransmission = ENABLE;  //trasmission will be retied if it fails (if BUS was not idle)
+	hcan1.Init.AutoRetransmission = ENABLE;  //trasmission will be retied if it fails (if BUS was not idle). The retransmission wont happen in Loopback mode bcs in loopback mode, ack errors will be ignored
 	hcan1.Init.AutoBusOff = DISABLE;
 	hcan1.Init.AutoWakeUp = DISABLE;  //for low power mode
 	hcan1.Init.TimeTriggeredMode = DISABLE;
@@ -210,6 +213,25 @@ void CAN1_Tx(void)
 	while (HAL_CAN_IsTxMessagePending(&hcan1, TxMailbox));
 
 	sprintf(msg, "Message Transmitted\r\n");
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+}
+
+void CAN1_Rx(void)
+{
+	uint8_t rcvd_msg[5];
+	CAN_RxHeaderTypeDef RxHeader;
+
+	char msg[50];
+
+	//we are waiting for at least one message in to the RX FIFO0
+	while (! HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0));
+
+	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, rcvd_msg) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	sprintf(msg, "Message received: %s\r\n", rcvd_msg);
 	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 }
 
