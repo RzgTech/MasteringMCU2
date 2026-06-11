@@ -145,6 +145,34 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 void GPIO_Init(void)
 {
 
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+
+	GPIO_InitTypeDef gpio_button;
+	GPIO_InitTypeDef gpio_led;
+
+	gpio_button.Pin = GPIO_PIN_13;
+	gpio_button.Mode = GPIO_MODE_IT_FALLING;
+	gpio_button.Pull = GPIO_NOPULL;
+	gpio_button.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOC, &gpio_button);
+
+	gpio_led.Pin = GPIO_PIN_9;
+	gpio_led.Mode = GPIO_MODE_OUTPUT_PP;
+	gpio_led.Pull = GPIO_NOPULL;
+	gpio_led.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOC, &gpio_led);
+
+	gpio_led.Pin = GPIO_PIN_8;
+	HAL_GPIO_Init(GPIOC, &gpio_led);
+
+	gpio_led.Pin = GPIO_PIN_8;
+	HAL_GPIO_Init(GPIOB, &gpio_led);
+
+	gpio_led.Pin = GPIO_PIN_6;
+	HAL_GPIO_Init(GPIOC, &gpio_led);
+
+	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 void UART2_Init(void)
