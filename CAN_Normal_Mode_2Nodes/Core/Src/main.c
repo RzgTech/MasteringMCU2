@@ -27,6 +27,7 @@ CAN_HandleTypeDef hcan1;
 UART_HandleTypeDef huart;  //UART2 handle
 CAN_RxHeaderTypeDef RxHeader;
 uint8_t led_no = 0;
+uint8_t counter = 0;
 
 int main()
 {
@@ -303,11 +304,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	CAN1_TX();
+	uint8_t message;
+	uint32_t txMailbox;
+	CAN_TxHeaderTypeDef TxHeader;  //no meaning in remote frame
+
+	if (counter == 4)
+	{
+		//N1 sending Remote frame to N2
+		TxHeader.StdId = 0x651;
+		TxHeader.RTR = CAN_RTR_REMOTE;
+		TxHeader.DLC = 2; //N1 demanding 2 bytes of reply
+
+		if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, &message, &txMailbox))
+		{
+			Error_handler();
+		}
+
+		counter = 0;
+	}
+	else
+	{
+		CAN1_TX();
+		counter ++;
+	}
+
 
 }
-
-
 
 void send_response(uint32_t StdId)
 {
