@@ -222,6 +222,9 @@ void CAN1_Init(void)
 	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
 	hcan1.Init.TimeSeg1 = CAN_BS1_8TQ;
 	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+	//to work with CAN atMbps you can do:  SYS_CLOCK_FREQ_84_MHZ, CAN_BS1_11TQ and CAN_BS2_2TQ (based on
+	//the http://www.bittiming.can-wiki.info/), but at 1MHz, the distance btw 2 nodes should be short
+	//otherwise it may not work.
 
 	if (HAL_CAN_Init(&hcan1) != HAL_OK)
 	{
