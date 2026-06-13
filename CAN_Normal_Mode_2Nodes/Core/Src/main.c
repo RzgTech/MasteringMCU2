@@ -9,6 +9,7 @@
 #include "stm32f4xx_hal.h"
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 
 void SystemCLock_Config_HSE(uint8_t clocl_freq);
 void GPIO_Init(void);
@@ -17,11 +18,14 @@ void Error_handler(void);
 void CAN1_Init(void);
 void CAN_Filter_Config(void);
 void CAN1_TX(void);
+void send_response(uint32_t StdId);
+void LED_Manage_Output(uint8_t led_no);
 void Timer6_Init(void);
 
 TIM_HandleTypeDef htimer6;  //timer6 is basic timer
 CAN_HandleTypeDef hcan1;
 UART_HandleTypeDef huart;  //UART2 handle
+CAN_RxHeaderTypeDef RxHeader;
 uint8_t led_no = 0;
 
 int main()
@@ -241,19 +245,117 @@ void CAN_Filter_Config(void)
 
 }
 
+void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *hcan)
+{
+	char msg[100];
+	sprintf(msg, "Message Transmitted: M0\r\n");
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
+}
+
 void HAL_CAN_TxMailbox1CompleteCallback(CAN_HandleTypeDef *hcan)
 {
-
+	char msg[100];
+	sprintf(msg, "Message Transmitted: M1\r\n");
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 }
 
 void HAL_CAN_TxMailbox2CompleteCallback(CAN_HandleTypeDef *hcan)
 {
-
+	char msg[100];
+	sprintf(msg, "Message Transmitted:M2\r\n");
+	HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
+	uint8_t rcvd_msg[8];
+	char msg[50];
 
+	if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, rcvd_msg) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	if (RxHeader.StdId == 0x65D && RxHeader.RTR == 0)
+	{
+		//received data frame by n2 sent from n1
+		LED_Manage_Output(rcvd_msg[0]);
+		sprintf(msg, "Reply Received: %#X\r\n", rcvd_msg[0]);
+	}
+	else if (RxHeader.StdId == 0x651 && RxHeader.RTR == 1)
+	{
+		//received remote remote by n2 sent from n1
+		send_response(RxHeader.StdId);
+		return;
+	}
+	else if(RxHeader.StdId == 0x651 && RxHeader.RTR == 0)
+	{
+		//received data frame by n1 sent from n2 (as a reply)
+		sprintf(msg, "Reply Received: %#X\r\n", rcvd_msg[0] << 8 | rcvd_msg[1]);
+	}
+
+	if (HAL_UART_Transmit(&huart, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY) != HAL_OK)
+	{
+		Error_handler();
+	}
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	CAN1_TX();
+
+}
+
+
+
+void send_response(uint32_t StdId)
+{
+	uint8_t response[2] = {0xAB, 0xCD};
+
+	CAN_TxHeaderTypeDef TxHeader;
+	TxHeader.StdId = StdId;
+	TxHeader.DLC = 2;
+	TxHeader.IDE = CAN_ID_STD;
+	TxHeader.RTR = CAN_RTR_DATA;
+
+	uint32_t txMailbox;
+
+	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, response, &txMailbox) != HAL_OK)
+	{
+		Error_handler();
+	}
+}
+
+void LED_Manage_Output(uint8_t led_no)
+{
+	switch(led_no)
+	{
+	case 1:
+		HAL_GPIO_WritePin(LED1_PORT, LED1_PIN, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LED2_PORT, LED2_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED3_PORT, LED3_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED4_PORT, LED4_PIN, GPIO_PIN_RESET);
+		break;
+	case 2:
+		HAL_GPIO_WritePin(LED1_PORT, LED1_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED2_PORT, LED2_PIN, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LED3_PORT, LED3_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED4_PORT, LED4_PIN, GPIO_PIN_RESET);
+		break;
+	case 3:
+		HAL_GPIO_WritePin(LED1_PORT, LED1_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED2_PORT, LED2_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED3_PORT, LED3_PIN, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LED4_PORT, LED4_PIN, GPIO_PIN_RESET);
+		break;
+	case 4:
+		HAL_GPIO_WritePin(LED1_PORT, LED1_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED2_PORT, LED2_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED3_PORT, LED3_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED4_PORT, LED4_PIN, GPIO_PIN_SET);
+		break;
+	}
 }
 
 void CAN1_TX(void)
@@ -293,12 +395,6 @@ void Timer6_Init(void)
 	{
 		Error_handler();
 	}
-
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-	CAN1_TX();
 
 }
 
