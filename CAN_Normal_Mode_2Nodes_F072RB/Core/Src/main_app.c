@@ -5,13 +5,12 @@
  *      Author: Vahid
  */
 
-#include "main.h"
-#include "stm32f4xx_hal.h"
+#include <main_app.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
 
-void SystemCLock_Config_HSE(uint8_t clocl_freq);
+void SystemCLock_Config_HSE();
 void GPIO_Init(void);
 void UART2_Init();
 void Error_handler(void);
@@ -32,7 +31,7 @@ uint8_t counter = 0;
 int main()
 {
 	HAL_Init();
-	SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);
+	SystemCLock_Config_HSE();
 
 	GPIO_Init();
 	UART2_Init();
@@ -58,7 +57,7 @@ int main()
 	return 0;
 }
 
-void SystemCLock_Config_HSE(uint8_t clocl_freq)
+void SystemCLock_Config_HSE()
 {
 	RCC_OscInitTypeDef osc_init;
 	RCC_ClkInitTypeDef clk_init;
@@ -67,69 +66,15 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 
 	osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSE;
 	osc_init.HSEState = RCC_HSE_BYPASS;
-	osc_init.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	osc_init.PLL.PLLState = RCC_PLL_ON;
 
-	switch (clocl_freq)
-	{
-	case SYS_CLOCK_FREQ_50_MHZ:
-	{
-		osc_init.PLL.PLLM = 4;
-		osc_init.PLL.PLLN = 50;
-		osc_init.PLL.PLLP = RCC_PLLP_DIV2;
-		osc_init.PLL.PLLQ = 2; //default value
-		osc_init.PLL.PLLR = 2; //default value
+	clk_init.ClockType = RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | \
+			RCC_CLOCKTYPE_PCLK1;
+	clk_init.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
+	clk_init.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	clk_init.APB1CLKDivider = RCC_HCLK_DIV1;
 
-		clk_init.ClockType = RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | \
-				RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-		clk_init.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-		clk_init.AHBCLKDivider = RCC_SYSCLK_DIV1;
-		clk_init.APB1CLKDivider = RCC_HCLK_DIV2;
-		clk_init.APB2CLKDivider = RCC_HCLK_DIV1;
+	FLatency = FLASH_LATENCY_0;
 
-		FLatency = FLASH_ACR_LATENCY_1WS;
-		break;
-	}
-	case SYS_CLOCK_FREQ_84_MHZ:
-	{
-		osc_init.PLL.PLLM = 4;
-		osc_init.PLL.PLLN = 84;
-		osc_init.PLL.PLLP = RCC_PLLP_DIV2;
-		osc_init.PLL.PLLQ = 2; //default value
-		osc_init.PLL.PLLR = 1; //default value
-
-		clk_init.ClockType = RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | \
-				RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-		clk_init.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-		clk_init.AHBCLKDivider = RCC_SYSCLK_DIV1;
-		clk_init.APB1CLKDivider = RCC_HCLK_DIV2;
-		clk_init.APB2CLKDivider = RCC_HCLK_DIV2;
-
-		FLatency = FLASH_ACR_LATENCY_2WS;
-		break;
-	}
-	case SYS_CLOCK_FREQ_120_MHZ:
-	{
-		osc_init.PLL.PLLM = 4;
-		osc_init.PLL.PLLN = 120;
-		osc_init.PLL.PLLP = RCC_PLLP_DIV2;
-		osc_init.PLL.PLLQ = 4; //default value
-		osc_init.PLL.PLLR = 2; //default value
-
-
-		clk_init.ClockType = RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | \
-				RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-		clk_init.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-		clk_init.AHBCLKDivider = RCC_SYSCLK_DIV1;
-		clk_init.APB1CLKDivider = RCC_HCLK_DIV4;
-		clk_init.APB2CLKDivider = RCC_HCLK_DIV2;
-
-		FLatency = FLASH_ACR_LATENCY_3WS;
-		break;
-	}
-	default:
-		return;
-	}
 
 	if (HAL_RCC_OscConfig(&osc_init)!= HAL_OK)
 	{
@@ -141,6 +86,8 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 		Error_handler();
 	}
 
+	__HAL_RCC_HSI_DISABLE();
+
 	//Systick configuration
 	HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 	HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
@@ -151,9 +98,9 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 void GPIO_Init(void)
 {
 
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
 
 	GPIO_InitTypeDef gpio_button;
 	GPIO_InitTypeDef gpio_led;
@@ -185,7 +132,7 @@ void GPIO_Init(void)
 	led_test.Pull = GPIO_NOPULL;
 	HAL_GPIO_Init(GPIOA, &led_test);
 
-	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+	HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 }
 
 void UART2_Init(void)
@@ -207,7 +154,7 @@ void UART2_Init(void)
 
 void CAN1_Init(void)
 {
-	hcan1.Instance = CAN1;
+	hcan1.Instance = CAN;
 	hcan1.Init.Mode = CAN_MODE_NORMAL;
 	hcan1.Init.ReceiveFifoLocked = DISABLE;
 	hcan1.Init.AutoRetransmission = ENABLE;  //trasmission will be retied if it fails (if BUS was not idle). The retransmission wont happen in Loopback mode bcs in loopback mode, ack errors will be ignored
@@ -218,10 +165,10 @@ void CAN1_Init(void)
 
 	//bit timing settings -> based on http://www.bittiming.can-wiki.info/ , clock rate 25 MHz
 	//500 Kbps
-	hcan1.Init.Prescaler = 5;
+	hcan1.Init.Prescaler = 1;
 	hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-	hcan1.Init.TimeSeg1 = CAN_BS1_8TQ;
-	hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+	hcan1.Init.TimeSeg1 = CAN_BS1_13TQ;
+	hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
 
 	if (HAL_CAN_Init(&hcan1) != HAL_OK)
 	{
@@ -291,7 +238,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 		LED_Manage_Output(rcvd_msg[0]);
 		sprintf(msg, "Reply Received: %#X\r\n", rcvd_msg[0]);
 	}
-	else if (RxHeader.StdId == 0x651 && RxHeader.RTR == 1)
+	else if (RxHeader.StdId == 0x651 && RxHeader.RTR == 2)
 	{
 		//received remote remote by n2 sent from n1
 		send_response(RxHeader.StdId);
@@ -333,7 +280,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	else
 	{
 		CAN1_TX();
-		counter++;
+		counter ++;
 	}
 }
 
@@ -399,17 +346,17 @@ void CAN1_TX(void)
 
 	msg = ++led_no;
 
-	if(led_no == 4)
+	if (led_no == 4)
 	{
 		led_no = 0;
 	}
-
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 
 	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, &msg, &TxMailbox) != HAL_OK) //we pass TxMailbox to this API to get the mailbox for transmission
 	{
 		Error_handler();
 	}
+
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 
 }
 
@@ -424,8 +371,8 @@ void Timer6_Init(void)
 	//If the prescaler for APB1 is not 1, multiplicator for the timer is 2, o.w it is 1.
 	htimer6.Instance = TIM6;
 	//time base of 1 sec
-	htimer6.Init.Prescaler = 4999;
-	htimer6.Init.Period = 10000-1;
+	htimer6.Init.Prescaler = 7999;
+	htimer6.Init.Period = 999;
 	if (HAL_TIM_Base_Init(&htimer6) != HAL_OK)
 	{
 		Error_handler();
