@@ -188,7 +188,7 @@ void CAN_Filter_Config(void)
 	can1_filter_config.FilterFIFOAssignment = CAN_RX_FIFO0; //which FIFO to be used for the message after passing the filter
 	can1_filter_config.FilterIdHigh = 0x0000;
 	can1_filter_config.FilterIdLow = 0x0000;
-	can1_filter_config.FilterMaskIdHigh = 0x0000;
+	can1_filter_config.FilterMaskIdHigh = 0x01C0;
 	can1_filter_config.FilterMaskIdLow = 0x0000;
 	can1_filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
 	can1_filter_config.FilterScale = CAN_FILTERSCALE_32BIT; //RM>>30.7.4
