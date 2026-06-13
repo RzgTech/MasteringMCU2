@@ -22,11 +22,13 @@ void Timer6_Init(void);
 TIM_HandleTypeDef htimer6;  //timer6 is basic timer
 CAN_HandleTypeDef hcan1;
 UART_HandleTypeDef huart;  //UART2 handle
+uint8_t led_no = 0;
 
 int main()
 {
 	HAL_Init();
 	SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);
+
 	GPIO_Init();
 	UART2_Init();
 
@@ -58,11 +60,8 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 
 	uint32_t FLatency = 0;
 
-	osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_LSE | RCC_OSCILLATORTYPE_HSE;
-	osc_init.HSIState = RCC_HSI_ON; //by default it is ON, but anyway, we write it
-	osc_init.LSEState = RCC_LSE_ON;
+	osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSE;
 	osc_init.HSEState = RCC_HSE_BYPASS;
-	osc_init.HSICalibrationValue = 16;  //by default it is 16, but anyway, we write it
 	osc_init.PLL.PLLSource = RCC_PLLSOURCE_HSE;
 	osc_init.PLL.PLLState = RCC_PLL_ON;
 
@@ -81,7 +80,7 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 		clk_init.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 		clk_init.AHBCLKDivider = RCC_SYSCLK_DIV1;
 		clk_init.APB1CLKDivider = RCC_HCLK_DIV2;
-		clk_init.APB2CLKDivider = RCC_HCLK_DIV2;
+		clk_init.APB2CLKDivider = RCC_HCLK_DIV1;
 
 		FLatency = FLASH_ACR_LATENCY_1WS;
 		break;
@@ -92,7 +91,7 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 		osc_init.PLL.PLLN = 84;
 		osc_init.PLL.PLLP = RCC_PLLP_DIV2;
 		osc_init.PLL.PLLQ = 2; //default value
-		osc_init.PLL.PLLR = 2; //default value
+		osc_init.PLL.PLLR = 1; //default value
 
 		clk_init.ClockType = RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | \
 				RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
@@ -109,7 +108,7 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 		osc_init.PLL.PLLM = 4;
 		osc_init.PLL.PLLN = 120;
 		osc_init.PLL.PLLP = RCC_PLLP_DIV2;
-		osc_init.PLL.PLLQ = 2; //default value
+		osc_init.PLL.PLLQ = 4; //default value
 		osc_init.PLL.PLLR = 2; //default value
 
 
@@ -132,7 +131,7 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 		Error_handler();
 	}
 
-	if (HAL_RCC_ClockConfig(&clk_init, FLatency))
+	if (HAL_RCC_ClockConfig(&clk_init, FLatency) != HAL_OK)
 	{
 		Error_handler();
 	}
@@ -140,6 +139,8 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 	//Systick configuration
 	HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 	HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+
+	HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
 void GPIO_Init(void)
@@ -255,7 +256,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 }
 
-uint8_t led_no = 0;
 void CAN1_TX(void)
 {
 	uint32_t TxMailbox;

@@ -42,7 +42,7 @@ void CAN1_SCE_IRQHandler(void)
 
 void EXTI15_10_IRQHandler(void)  //for the buuton: when it is pressed, inside the ISR, we will enable the timer6 
 {
-	HAL_TIM_Base_Start(&htimer6);
+	HAL_TIM_Base_Start_IT(&htimer6);
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
 }
 
