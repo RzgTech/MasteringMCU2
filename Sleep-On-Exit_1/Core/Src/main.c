@@ -30,6 +30,9 @@ int main()
 	UART2_Init();
 
 	Timer6_Init();
+
+	//SCB->SCR |= (1 << 1); enabling sleep on exit - we can also use an API:
+	HAL_PWR_EnableSleepOnExit();
 	/* lets start with fresh Status register of Timer to avoid any spurious interrupts */
     TIM6->SR = 0;  //we had to use this for all the previous projects where using timer interrupt.
 
