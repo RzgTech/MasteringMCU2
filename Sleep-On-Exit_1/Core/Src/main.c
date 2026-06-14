@@ -19,16 +19,23 @@ void Timer6_Init(void);
 
 TIM_HandleTypeDef htimer6;  //timer6 is basic timer
 UART_HandleTypeDef huart;  //UART2 handle
+extern uint8_t some_data[];
 
 int main()
 {
 	HAL_Init();
-	SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);
+	//SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);  we cooment this to use the HSI clock which is the default clock: 16MHz
 
 	GPIO_Init();
 	UART2_Init();
 
 	Timer6_Init();
+	/* lets start with fresh Status register of Timer to avoid any spurious interrupts */
+    TIM6->SR = 0;  //we had to use this for all the previous projects where using timer interrupt.
+
+	//Lets start the timer in interrupt mode
+	HAL_TIM_Base_Start_IT(&htimer6);
+
 
 	while(1);
 
@@ -127,7 +134,18 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 
 void GPIO_Init(void)
 {
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 
+    GPIO_InitTypeDef ledgpio ;
+    ledgpio.Pin = GPIO_PIN_5;
+    ledgpio.Mode = GPIO_MODE_OUTPUT_PP;
+    ledgpio.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA,&ledgpio);
+
+	ledgpio.Pin = GPIO_PIN_12;
+    ledgpio.Mode = GPIO_MODE_OUTPUT_PP;
+    ledgpio.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA,&ledgpio);
 
 }
 
@@ -151,7 +169,10 @@ void UART2_Init(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-
+	if ( HAL_UART_Transmit(&huart,(uint8_t*)some_data,(uint16_t)strlen((char*)some_data),HAL_MAX_DELAY) != HAL_OK)
+	{
+		Error_handler();
+	}
 }
 
 
@@ -161,8 +182,8 @@ void Timer6_Init(void)
 	//If the prescaler for APB1 is not 1, multiplicator for the timer is 2, o.w it is 1.
 	htimer6.Instance = TIM6;
 	//time base of 1 sec
-	htimer6.Init.Prescaler = 4999;
-	htimer6.Init.Period = 10000-1;
+	htimer6.Init.Prescaler = 159;
+	htimer6.Init.Period = 999;
 	if (HAL_TIM_Base_Init(&htimer6) != HAL_OK)
 	{
 		Error_handler();
