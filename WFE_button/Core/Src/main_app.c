@@ -24,7 +24,9 @@ int main()
 {
 
 	char msg[50];
-	HAL_Init();
+	HAL_Init(); //this function actually configures the SysTick. So, now that system interrupt is actually preventing this
+				//WFE to make the processor sleep, because for every one milliseconds, it generates the interrupt.
+				//And as a result, the event register will always be 1.
 	//SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);  we cooment this to use the HSI clock which is the default clock: 16MHz
 
 	GPIO_Init();
@@ -34,9 +36,30 @@ int main()
 
 	while(1)
 	{
+	    if ( HAL_UART_Transmit(&huart,(uint8_t*)some_data,(uint16_t)strlen((char*)some_data),HAL_MAX_DELAY) != HAL_OK)
+	    {
+		  Error_handler();
+	    }
+
+	    memset(msg,0,sizeof(msg));
+	    sprintf(msg,"Going to Sleep !\r\n");
+	    HAL_UART_Transmit(&huart,(uint8_t*)msg,(uint16_t)strlen((char*)msg),HAL_MAX_DELAY);
+
+	    /* Systick is not required so disabled it before going to sleep*/
+	    HAL_SuspendTick();
 		//going to sleep
-		__WFI();
-		//MCU resumes here when it wakes up
+	    __SEV(); // Send event -> just to make sure an event is always
+	    __WFE(); // Clears the event and resumes back
+	    __WFE(); // Goes to sleep definitely
+	    //why doing like this? it's because of baudrate at 115200:
+	    //look at this: https://www.udemy.com/course/microcontroller-programming-stm32-timers-pwm-can-bus-protocol/learn/lecture/12093510#questions/11239079
+		/* Continues from here when wakes up */
+		/* Enable the Systick */
+		HAL_ResumeTick();
+
+		memset(msg,0,sizeof(msg));
+		sprintf(msg,"Woke up !\r\n");
+		HAL_UART_Transmit(&huart,(uint8_t*)msg,(uint16_t)strlen((char*)msg),HAL_MAX_DELAY);
 	}
 
 	return 0;
@@ -145,13 +168,13 @@ void GPIO_Init(void)
     HAL_GPIO_Init(GPIOA,&ledgpio);
 #endif
     buttongpio.Pin = GPIO_PIN_13;
-    buttongpio.Mode = GPIO_MODE_IT_FALLING;
+    buttongpio.Mode = GPIO_MODE_EVT_FALLING;
     buttongpio.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC,&buttongpio);
-
+#if 0
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 15, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-
+#endif
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
@@ -201,19 +224,6 @@ void UART2_Init(void)
 		//there is a problem
 		Error_handler();
 	}
-}
-
-/**
-  * @brief  EXTI line detection callbacks.
-  * @param  GPIO_Pin Specifies the pins connected EXTI line
-  * @retval None
-  */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-    if ( HAL_UART_Transmit(&huart,(uint8_t*)some_data,(uint16_t)strlen((char*)some_data),HAL_MAX_DELAY) != HAL_OK)
-    {
-	  Error_handler();
-    }
 }
 
 void Error_handler(void)
