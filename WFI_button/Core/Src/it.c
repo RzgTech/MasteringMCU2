@@ -14,7 +14,7 @@ void SysTick_Handler(void)
 	HAL_SYSTICK_IRQHandler();  //just calls the callback
 }
 
-void TIM6_DAC_IRQHandler(void)
+void EXTI15_10_IRQHandler(void)
 {
-	HAL_TIM_IRQHandler(&htimer6);
+	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
 }

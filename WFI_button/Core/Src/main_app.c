@@ -15,32 +15,29 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq);
 void GPIO_Init(void);
 void UART2_Init();
 void Error_handler(void);
-void Timer6_Init(void);
+void GPIO_AnalogConfig(void);
 
-TIM_HandleTypeDef htimer6;  //timer6 is basic timer
 UART_HandleTypeDef huart;  //UART2 handle
 extern uint8_t some_data[];
 
 int main()
 {
+
+	char msg[50];
 	HAL_Init();
 	//SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);  we cooment this to use the HSI clock which is the default clock: 16MHz
 
 	GPIO_Init();
 	UART2_Init();
 
-	Timer6_Init();
+	GPIO_AnalogConfig();
 
-	//SCB->SCR |= (1 << 1); enabling sleep on exit - we can also use an API:
-	HAL_PWR_EnableSleepOnExit();
-	/* lets start with fresh Status register of Timer to avoid any spurious interrupts */
-    TIM6->SR = 0;  //we had to use this for all the previous projects where using timer interrupt.
-
-	//Lets start the timer in interrupt mode
-	HAL_TIM_Base_Start_IT(&htimer6);
-
-
-	while(1);
+	while(1)
+	{
+		//going to sleep
+		__WFI();
+		//MCU resumes here when it wakes up
+	}
 
 	return 0;
 }
@@ -138,18 +135,55 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 void GPIO_Init(void)
 {
 	__HAL_RCC_GPIOA_CLK_ENABLE();
-
-    GPIO_InitTypeDef ledgpio ;
-    ledgpio.Pin = GPIO_PIN_5;
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_SLEEP_DISABLE(); //disabling GPIOA clock when it is in sleep mode. we cannot do the same for GPIOC bcs it is our wake up source
+    GPIO_InitTypeDef ledgpio, buttongpio;
+#if 0
+    ledgpio.Pin = GPIO_PIN_12;
     ledgpio.Mode = GPIO_MODE_OUTPUT_PP;
     ledgpio.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA,&ledgpio);
+#endif
+    buttongpio.Pin = GPIO_PIN_13;
+    buttongpio.Mode = GPIO_MODE_IT_FALLING;
+    buttongpio.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOC,&buttongpio);
 
-	ledgpio.Pin = GPIO_PIN_12;
-    ledgpio.Mode = GPIO_MODE_OUTPUT_PP;
-    ledgpio.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA,&ledgpio);
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 15, 0);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+
+}
+
+/**
+  * @brief  Configures specified GPIO pins of GPIOA and GPIOC ports as analog.
+  * @retval None
+  */
+void GPIO_AnalogConfig(void)
+{
+  GPIO_InitTypeDef GpioA,GpioC;
+
+  //skip GPIO 13 and 14 as they are SWDIO and SWD_CLK
+  uint32_t gpio_pins = GPIO_PIN_0  | GPIO_PIN_1  | GPIO_PIN_4  | \
+                       GPIO_PIN_5  | GPIO_PIN_6  | GPIO_PIN_7  | \
+                       GPIO_PIN_8  | GPIO_PIN_9  | GPIO_PIN_10 | \
+                       GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_15;
+
+  GpioA.Pin = gpio_pins;
+  GpioA.Mode = GPIO_MODE_ANALOG;
+  HAL_GPIO_Init(GPIOA,&GpioA);
+
+  gpio_pins = GPIO_PIN_0  | GPIO_PIN_1  | GPIO_PIN_2  | \
+              GPIO_PIN_3  | GPIO_PIN_4  | GPIO_PIN_5  | \
+              GPIO_PIN_6  | GPIO_PIN_7  | GPIO_PIN_8  | \
+              GPIO_PIN_9  | GPIO_PIN_10 | GPIO_PIN_11 | \
+              GPIO_PIN_12 | GPIO_PIN_14 | GPIO_PIN_15;
+
+  GpioC.Pin = gpio_pins;
+  GpioC.Mode = GPIO_MODE_ANALOG;
+  HAL_GPIO_Init(GPIOC,&GpioC);
 }
 
 void UART2_Init(void)
@@ -169,29 +203,17 @@ void UART2_Init(void)
 	}
 }
 
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+/**
+  * @brief  EXTI line detection callbacks.
+  * @param  GPIO_Pin Specifies the pins connected EXTI line
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	if ( HAL_UART_Transmit(&huart,(uint8_t*)some_data,(uint16_t)strlen((char*)some_data),HAL_MAX_DELAY) != HAL_OK)
-	{
-		Error_handler();
-	}
-}
-
-
-void Timer6_Init(void)
-{
-	//It should be noted that, Timers drive clock from APB bus via a multiplier.
-	//If the prescaler for APB1 is not 1, multiplicator for the timer is 2, o.w it is 1.
-	htimer6.Instance = TIM6;
-	//time base of 1 sec
-	htimer6.Init.Prescaler = 159;
-	htimer6.Init.Period = 999;
-	if (HAL_TIM_Base_Init(&htimer6) != HAL_OK)
-	{
-		Error_handler();
-	}
-
+    if ( HAL_UART_Transmit(&huart,(uint8_t*)some_data,(uint16_t)strlen((char*)some_data),HAL_MAX_DELAY) != HAL_OK)
+    {
+	  Error_handler();
+    }
 }
 
 void Error_handler(void)
