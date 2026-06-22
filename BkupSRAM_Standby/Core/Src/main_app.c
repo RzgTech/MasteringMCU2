@@ -22,6 +22,8 @@ extern uint8_t some_data[];
 
 int main()
 {
+	uint32_t *pBackupSRAM;
+	char data[] = "Hello";
 
 	HAL_Init();
 
@@ -29,6 +31,22 @@ int main()
 
 	SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);
 	UART2_Init();
+
+	//1. enabling clock for Backup SRAM
+	__HAL_RCC_BKPSRAM_CLK_ENABLE();
+
+	//2. enabling write access to backup SRAM
+	__HAL_RCC_PWR_CLK_ENABLE();
+	HAL_PWR_EnableBkUpAccess();
+
+	pBackupSRAM = (uint32_t*)BKPSRAM_BASE;
+
+	for(int i=0; i<strlen(data); i++)
+	{
+		*(pBackupSRAM + i) = data[i];
+	}
+
+	/*here we reset (system reset) to verify that the content inside the backup sram remains unchanged*/
 
 	while(1);
 
