@@ -94,6 +94,8 @@ int main()
 	//Enable the wakeup pin 1 in pwr_csr register
 	HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1);
 
+	HAL_PWREx_EnableBkUpReg(); //enabling the backup voltage regulator to preserve the content of backup SRAM after waking up from the Standby mode
+
 	HAL_PWR_EnterSTANDBYMode(); //when it wakes up using the wakeup pin from standby mode,
 								//it undergoes system reset (it will not resume the codes after HAL_PWR_EnterSTANDBYMode();,
 								//it starts form the beginning of the main.
