@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 void SystemCLock_Config_HSE(uint8_t clocl_freq);
 void GPIO_Init(void);
@@ -20,9 +21,27 @@ void GPIO_AnalogConfig(void);
 UART_HandleTypeDef huart;  //UART2 handle
 extern uint8_t some_data[];
 
+/**
+  * @brief  Print a string to console over UART.
+  * @param  format: Format string as in printf.
+  * @param  ...: Additional arguments providing the data to print.
+  * @retval None
+  */
+void printmsg(char *format,...)
+{
+  char str[80];
+
+  /*Extract the the argument list using VA apis */
+  va_list args;
+  va_start(args, format);
+  vsprintf(str, format,args);
+  HAL_UART_Transmit(&huart,(uint8_t *)str, strlen(str),HAL_MAX_DELAY);
+  va_end(args);
+}
+
 int main()
 {
-	uint32_t *pBackupSRAM;
+	uint32_t *pBackupSRAM = 0;
 	char data[] = "Hello";
 
 	HAL_Init();
@@ -41,12 +60,46 @@ int main()
 
 	pBackupSRAM = (uint32_t*)BKPSRAM_BASE;
 
-	for(int i=0; i<strlen(data); i++)
+	if (__HAL_PWR_GET_FLAG(PWR_FLAG_SB) != RESET) //to understand if the reset was due to the standby or not
 	{
-		*(pBackupSRAM + i) = data[i];
+		__HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB); //set by the hardware and should be cleared by software
+		__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+		printmsg("woke up from the standby mode\r\n");
+		//reading back the backup SRAM after waking up from standby mode
+		uint8_t data = (uint8_t)*pBackupSRAM; //comparing only the first byte
+		if (data != 'H')
+		{
+			printmsg("BACKUP SRAM data lost\r\n");
+		}
+		else
+		{
+			printmsg("BACKUP SRAM data safe\r\n");
+		}
+	}
+	else
+	{
+		for(uint32_t i=0; i<strlen(data)+1; i++)
+		{
+			*(pBackupSRAM + i) = data[i];
+		}
 	}
 
 	/*here we reset (system reset) to verify that the content inside the backup sram remains unchanged*/
+	printmsg("Press the user button to enter standby mode\r\n");
+	while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) != GPIO_PIN_RESET);
+
+	//when user pushes the button it comes here
+	printmsg("Going to Standby mode\r\n");
+
+	//Enable the wakeup pin 1 in pwr_csr register
+	HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1);
+
+	HAL_PWR_EnterSTANDBYMode(); //when it wakes up using the wakeup pin from standby mode,
+								//it undergoes system reset (it will not resume the codes after HAL_PWR_EnterSTANDBYMode();,
+								//it starts form the beginning of the main.
+								//we can realize the cause of the reset using an reset cause flag
+
+
 
 	while(1);
 
