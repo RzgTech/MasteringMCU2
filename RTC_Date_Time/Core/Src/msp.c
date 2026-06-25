@@ -49,5 +49,28 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 
 void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
 {
+	//reminder: RTC is inside backup domain so its clock enabling is different from other peripherals
 
+	RCC_OscInitTypeDef RCC_OscInitStruct;
+	RCC_PeriphCLKInitTypeDef RCC_RTCPeriphClkInit;
+
+	//1. Turn on the LSE
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE;
+	RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+	if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	//2. Select LSE as RTC CLOCK
+	RCC_RTCPeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+	RCC_RTCPeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+	if (HAL_RCCEx_PeriphCLKConfig(&RCC_RTCPeriphClkInit))
+	{
+		Error_handler();
+	}
+
+	//3. Enable the RTC Clock
+	__HAL_RCC_RTC_ENABLE();
 }
