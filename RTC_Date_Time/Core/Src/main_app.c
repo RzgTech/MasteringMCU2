@@ -16,9 +16,10 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq);
 void GPIO_Init(void);
 void UART2_Init();
 void Error_handler(void);
-void GPIO_AnalogConfig(void);
+void RTC_Init(void);
 
 UART_HandleTypeDef huart;  //UART2 handle
+RTC_HandleTypeDef hrtc;  //RTC handler
 
 /**
   * @brief  Print a string to console over UART.
@@ -40,9 +41,6 @@ void printmsg(char *format,...)
 
 int main()
 {
-	uint32_t *pBackupSRAM = 0;
-	char data[] = "Hello";
-
 	HAL_Init();
 
 	GPIO_Init();
@@ -50,56 +48,7 @@ int main()
 	SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);
 	UART2_Init();
 
-	//1. enabling clock for Backup SRAM
-	__HAL_RCC_BKPSRAM_CLK_ENABLE();
-
-	//2. enabling write access to backup SRAM
-	__HAL_RCC_PWR_CLK_ENABLE();
-	HAL_PWR_EnableBkUpAccess();
-
-	pBackupSRAM = (uint32_t*)BKPSRAM_BASE;
-
-	if (__HAL_PWR_GET_FLAG(PWR_FLAG_SB) != RESET) //to understand if the reset was due to the standby or not
-	{
-		__HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB); //set by the hardware and should be cleared by software
-		__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
-		printmsg("woke up from the standby mode\r\n");
-		//reading back the backup SRAM after waking up from standby mode
-		uint8_t data = (uint8_t)*pBackupSRAM; //comparing only the first byte
-		if (data != 'H')
-		{
-			printmsg("BACKUP SRAM data lost\r\n");
-		}
-		else
-		{
-			printmsg("BACKUP SRAM data safe\r\n");
-		}
-	}
-	else
-	{
-		for(uint32_t i=0; i<strlen(data)+1; i++)
-		{
-			*(pBackupSRAM + i) = data[i];
-		}
-	}
-
-	/*here we reset (system reset) to verify that the content inside the backup sram remains unchanged*/
-	printmsg("Press the user button to enter standby mode\r\n");
-	while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) != GPIO_PIN_RESET);
-
-	//when user pushes the button it comes here
-	printmsg("Going to Standby mode\r\n");
-
-	//Enable the wakeup pin 1 in pwr_csr register
-	HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1);
-
-	HAL_PWREx_EnableBkUpReg(); //enabling the backup voltage regulator to preserve the content of backup SRAM after waking up from the Standby mode
-
-	HAL_PWR_EnterSTANDBYMode(); //when it wakes up using the wakeup pin from standby mode,
-								//it undergoes system reset (it will not resume the codes after HAL_PWR_EnterSTANDBYMode();,
-								//it starts form the beginning of the main.
-								//we can realize the cause of the reset using an reset cause flag
-
+	RTC_Init();
 
 
 	while(1);
@@ -209,35 +158,6 @@ void GPIO_Init(void)
 
 }
 
-/**
-  * @brief  Configures specified GPIO pins of GPIOA and GPIOC ports as analog.
-  * @retval None
-  */
-void GPIO_AnalogConfig(void)
-{
-  GPIO_InitTypeDef GpioA,GpioC;
-
-  //skip GPIO 13 and 14 as they are SWDIO and SWD_CLK
-  uint32_t gpio_pins = GPIO_PIN_0  | GPIO_PIN_1  | GPIO_PIN_4  | \
-                       GPIO_PIN_5  | GPIO_PIN_6  | GPIO_PIN_7  | \
-                       GPIO_PIN_8  | GPIO_PIN_9  | GPIO_PIN_10 | \
-                       GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_15;
-
-  GpioA.Pin = gpio_pins;
-  GpioA.Mode = GPIO_MODE_ANALOG;
-  HAL_GPIO_Init(GPIOA,&GpioA);
-
-  gpio_pins = GPIO_PIN_0  | GPIO_PIN_1  | GPIO_PIN_2  | \
-              GPIO_PIN_3  | GPIO_PIN_4  | GPIO_PIN_5  | \
-              GPIO_PIN_6  | GPIO_PIN_7  | GPIO_PIN_8  | \
-              GPIO_PIN_9  | GPIO_PIN_10 | GPIO_PIN_11 | \
-              GPIO_PIN_12 | GPIO_PIN_14 | GPIO_PIN_15;
-
-  GpioC.Pin = gpio_pins;
-  GpioC.Mode = GPIO_MODE_ANALOG;
-  HAL_GPIO_Init(GPIOC,&GpioC);
-}
-
 void UART2_Init(void)
 {
 	huart.Instance = USART2;
@@ -251,6 +171,22 @@ void UART2_Init(void)
 	if (HAL_UART_Init(&huart) != HAL_OK)
 	{
 		//there is a problem
+		Error_handler();
+	}
+}
+
+void RTC_Init(void)
+{
+	hrtc.Instance = RTC;
+	hrtc.Init.AsynchPrediv = 0x7F;
+	hrtc.Init.SynchPrediv = 0xFF;
+	hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+	hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_LOW; //does not matter since output is disabled
+	hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN; //does not matter since output is disabled
+	hrtc.Init.HourFormat = RTC_HOURFORMAT_12;
+
+	if (HAL_RTC_Init(&hrtc) != HAL_OK)
+	{
 		Error_handler();
 	}
 }

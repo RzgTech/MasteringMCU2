@@ -46,3 +46,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 	HAL_NVIC_SetPriority(USART2_IRQn, 15, 0);
 
 }
+
+void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
+{
+
+}
