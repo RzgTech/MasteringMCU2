@@ -17,6 +17,8 @@ void GPIO_Init(void);
 void UART2_Init();
 void Error_handler(void);
 void RTC_Init(void);
+void RTC_CalendarConfig(void);
+char* get_dayofweek(uint8_t number);
 
 UART_HandleTypeDef huart;  //UART2 handle
 RTC_HandleTypeDef hrtc;  //RTC handler
@@ -49,6 +51,8 @@ int main()
 	UART2_Init();
 
 	RTC_Init();
+
+	RTC_CalendarConfig();
 
 
 	while(1);
@@ -152,9 +156,12 @@ void GPIO_Init(void)
     GPIO_InitTypeDef buttongpio;
 
     buttongpio.Pin = GPIO_PIN_13;
-    buttongpio.Mode = GPIO_MODE_INPUT;
+    buttongpio.Mode = GPIO_MODE_IT_FALLING;
     buttongpio.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC,&buttongpio);
+
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
@@ -189,6 +196,66 @@ void RTC_Init(void)
 	{
 		Error_handler();
 	}
+}
+
+void RTC_CalendarConfig(void)
+{
+	//this function does RTC calendar config
+	//let's configure the calendar for time: 12:11:10 PM Date: 27 June 2026 Saturday
+
+	RTC_TimeTypeDef rtc_timeInit;
+	RTC_DateTypeDef rtc_dateInit;
+
+	rtc_timeInit.Hours = 12;
+	rtc_timeInit.Minutes = 11;
+	rtc_timeInit.Seconds = 10;
+	rtc_timeInit.TimeFormat = RTC_HOURFORMAT12_PM;
+
+	if (HAL_RTC_SetTime(&hrtc, &rtc_timeInit, RTC_FORMAT_BIN)!=HAL_OK)
+	{
+		Error_handler();
+	}
+
+	rtc_dateInit.Date = 27;
+	rtc_dateInit.Month = RTC_MONTH_JUNE;
+	rtc_dateInit.Year = 26;
+	rtc_dateInit.WeekDay = RTC_WEEKDAY_SATURDAY;
+
+	if (HAL_RTC_SetDate(&hrtc, &rtc_dateInit, RTC_FORMAT_BIN) != HAL_OK)
+	{
+		Error_handler();
+	}
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	RTC_TimeTypeDef current_time;
+	RTC_DateTypeDef current_date;
+	char *cur_time_format;
+
+	if (HAL_RTC_GetTime(&hrtc, &current_time, RTC_FORMAT_BIN) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	cur_time_format = current_time.TimeFormat == 0 ? "AM": "PM";
+
+	if (HAL_RTC_GetDate(&hrtc, &current_date, RTC_FORMAT_BIN) != HAL_OK)
+	{
+		Error_handler();
+	}
+
+	printmsg("TIME: %02d:%02d:%02d %s\r\n", current_time.Hours, current_time.Minutes, current_time.Seconds, cur_time_format);
+	printmsg("DATE: %02d/%2d/%2d <%s>\r\n", current_date.Date, current_date.Month, 2000 + current_date.Year, get_dayofweek(current_date.WeekDay));
+
+
+}
+
+char* get_dayofweek(uint8_t number)
+{
+	char* weekdays[] = {"MONDAY", "TUESDAY", "WEDNESADY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
+
+	return weekdays[number-1];
 }
 
 void Error_handler(void)
