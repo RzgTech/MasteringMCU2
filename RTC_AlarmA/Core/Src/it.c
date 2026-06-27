@@ -7,6 +7,8 @@
 
 #include <main_app.h>
 
+extern RTC_HandleTypeDef hrtc;
+
 void SysTick_Handler(void)
 {
 	HAL_IncTick(); //to increment the systick
@@ -16,4 +18,9 @@ void SysTick_Handler(void)
 void EXTI15_10_IRQHandler(void)
 {
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
+}
+
+void RTC_Alarm_IRQHandler(void)
+{
+	HAL_RTC_AlarmIRQHandler(&hrtc);
 }

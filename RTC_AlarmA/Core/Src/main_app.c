@@ -19,6 +19,7 @@ void Error_handler(void);
 void RTC_Init(void);
 void RTC_CalendarConfig(void);
 char* get_dayofweek(uint8_t number);
+void RTC_AlarmConfig(void);
 
 UART_HandleTypeDef huart;  //UART2 handle
 RTC_HandleTypeDef hrtc;  //RTC handler
@@ -50,21 +51,6 @@ int main(void)
   RTC_Init();
 
   printmsg("This is RTC calendar Test program\r\n");
-
-  if(__HAL_PWR_GET_FLAG(PWR_FLAG_SB) != RESET)
-  {
-    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
-    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
-    printmsg("Woke up from STANDBY\r\n");
-    HAL_GPIO_EXTI_Callback(0);
-  }
-
-  //RTC_CalendarConfig();
-  //Enable the wakeup pin 1 in pwr_csr register
-  HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1);
-
-  printmsg("Went to STANDBY mode\r\n");
-  HAL_PWR_EnterSTANDBYMode();
 
   while(1);
 
@@ -164,12 +150,18 @@ void SystemCLock_Config_HSE(uint8_t clocl_freq)
 void GPIO_Init(void)
 {
 	__HAL_RCC_GPIOC_CLK_ENABLE();
-    GPIO_InitTypeDef buttongpio;
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+    GPIO_InitTypeDef buttongpio, ledgpio;
 
     buttongpio.Pin = GPIO_PIN_13;
     buttongpio.Mode = GPIO_MODE_IT_FALLING;
     buttongpio.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOC,&buttongpio);
+
+    ledgpio.Pin = GPIO_PIN_5;
+    ledgpio.Mode = GPIO_MODE_OUTPUT_PP;
+    ledgpio.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &ledgpio);
 
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
@@ -201,7 +193,7 @@ void RTC_Init(void)
 	hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
 	hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_LOW; //does not matter since output is disabled
 	hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN; //does not matter since output is disabled
-	hrtc.Init.HourFormat = RTC_HOURFORMAT_12;
+	hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
 
 	if (HAL_RTC_Init(&hrtc) != HAL_OK)
 	{
@@ -218,9 +210,9 @@ void RTC_CalendarConfig(void)
 	RTC_DateTypeDef rtc_dateInit;
 
 	rtc_timeInit.Hours = 12;
-	rtc_timeInit.Minutes = 11;
-	rtc_timeInit.Seconds = 10;
-	rtc_timeInit.TimeFormat = RTC_HOURFORMAT12_PM;
+	rtc_timeInit.Minutes = 45;
+	rtc_timeInit.Seconds = 00;
+	//rtc_timeInit.TimeFormat = RTC_HOURFORMAT12_PM;
 
 	if (HAL_RTC_SetTime(&hrtc, &rtc_timeInit, RTC_FORMAT_BIN)!=HAL_OK)
 	{
@@ -240,6 +232,8 @@ void RTC_CalendarConfig(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	RTC_CalendarConfig();
+
 	RTC_TimeTypeDef current_time;
 	RTC_DateTypeDef current_date;
 	char *cur_time_format;
@@ -249,7 +243,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		Error_handler();
 	}
 
-	cur_time_format = current_time.TimeFormat == 0 ? "AM": "PM";
+	if (hrtc.Init.HourFormat == RTC_HOURFORMAT_12)
+	{
+		cur_time_format = current_time.TimeFormat == 0 ? "AM": "PM";
+	}
+	else
+	{
+		cur_time_format = " ";
+	}
 
 	if (HAL_RTC_GetDate(&hrtc, &current_date, RTC_FORMAT_BIN) != HAL_OK)
 	{
@@ -260,6 +261,33 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	printmsg("DATE: %02d/%2d/%2d <%s>\r\n", current_date.Date, current_date.Month, 2000 + current_date.Year, get_dayofweek(current_date.WeekDay));
 
 
+	RTC_AlarmConfig();
+
+}
+
+void RTC_AlarmConfig(void)
+{
+	RTC_AlarmTypeDef rtc_alarmAset;
+	memset(&rtc_alarmAset, 0, sizeof(rtc_alarmAset));
+	//xx:45:09
+	rtc_alarmAset.Alarm = RTC_ALARM_A;
+	rtc_alarmAset.AlarmTime.Minutes = 45;
+	rtc_alarmAset.AlarmTime.Seconds = 9;
+	rtc_alarmAset.AlarmMask = RTC_ALARMMASK_HOURS | RTC_ALARMMASK_DATEWEEKDAY;
+	rtc_alarmAset.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_NONE;
+	if (HAL_RTC_SetAlarm_IT(&hrtc, &rtc_alarmAset, RTC_FORMAT_BIN) != HAL_OK)
+	{
+		Error_handler();
+	}
+	printmsg("Alarm Set Successful\r\n");
+}
+
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
+{
+	printmsg("Alarm triggered\r\n");
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	HAL_Delay(2000); // it is important that the priority of the RTC_Alarm_IRQn is lower than systick o.w. the delay cannot preempt the RTC_Alarm_IRQn
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 }
 
 char* get_dayofweek(uint8_t number)

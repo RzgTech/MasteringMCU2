@@ -34,34 +34,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := RTC_Date_Time
+BUILD_ARTIFACT_NAME := RTC_AlarmA
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-RTC_Date_Time.elf \
+RTC_AlarmA.elf \
 
 MAP_FILES += \
-RTC_Date_Time.map \
+RTC_AlarmA.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-RTC_Date_Time.list \
+RTC_AlarmA.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: RTC_Date_Time.elf secondary-outputs
+main-build: RTC_AlarmA.elf secondary-outputs
 
 # Tool invocations
-RTC_Date_Time.elf RTC_Date_Time.map: $(OBJS) $(USER_OBJS) C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\RTC_Date_Time\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "RTC_Date_Time.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\RTC_Date_Time\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RTC_Date_Time.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+RTC_AlarmA.elf RTC_AlarmA.map: $(OBJS) $(USER_OBJS) C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\RTC_AlarmA\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "RTC_AlarmA.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\RTC_AlarmA\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RTC_AlarmA.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +70,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-RTC_Date_Time.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "RTC_Date_Time.list"
+RTC_AlarmA.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "RTC_AlarmA.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) RTC_Date_Time.elf RTC_Date_Time.list RTC_Date_Time.map default.size.stdout
+	-$(RM) RTC_AlarmA.elf RTC_AlarmA.list RTC_AlarmA.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
