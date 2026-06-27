@@ -41,23 +41,34 @@ void printmsg(char *format,...)
   va_end(args);
 }
 
-int main()
+int main(void)
 {
-	HAL_Init();
+  HAL_Init();
+  GPIO_Init();
+  SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);
+  UART2_Init();
+  RTC_Init();
 
-	GPIO_Init();
+  printmsg("This is RTC calendar Test program\r\n");
 
-	SystemCLock_Config_HSE(SYS_CLOCK_FREQ_50_MHZ);
-	UART2_Init();
+  if(__HAL_PWR_GET_FLAG(PWR_FLAG_SB) != RESET)
+  {
+    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
+    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+    printmsg("Woke up from STANDBY\r\n");
+    HAL_GPIO_EXTI_Callback(0);
+  }
 
-	RTC_Init();
+  //RTC_CalendarConfig();
+  //Enable the wakeup pin 1 in pwr_csr register
+  HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1);
 
-	RTC_CalendarConfig();
+  printmsg("Went to STANDBY mode\r\n");
+  HAL_PWR_EnterSTANDBYMode();
 
+  while(1);
 
-	while(1);
-
-	return 0;
+  return 0;
 }
 
 void SystemCLock_Config_HSE(uint8_t clocl_freq)
