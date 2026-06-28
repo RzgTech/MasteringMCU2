@@ -34,34 +34,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := RTC_AlarmA
+BUILD_ARTIFACT_NAME := RTC_AlarmA_standby_wakeup
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-RTC_AlarmA.elf \
+RTC_AlarmA_standby_wakeup.elf \
 
 MAP_FILES += \
-RTC_AlarmA.map \
+RTC_AlarmA_standby_wakeup.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-RTC_AlarmA.list \
+RTC_AlarmA_standby_wakeup.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: RTC_AlarmA.elf secondary-outputs
+main-build: RTC_AlarmA_standby_wakeup.elf secondary-outputs
 
 # Tool invocations
-RTC_AlarmA.elf RTC_AlarmA.map: $(OBJS) $(USER_OBJS) C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\RTC_AlarmA\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "RTC_AlarmA.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\RTC_AlarmA\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RTC_AlarmA.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+RTC_AlarmA_standby_wakeup.elf RTC_AlarmA_standby_wakeup.map: $(OBJS) $(USER_OBJS) C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\RTC_AlarmA_standby_wakeup\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "RTC_AlarmA_standby_wakeup.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Vahid\Documents\Embedded_Courses\MCU2\MCU2_workspace\My_workspace\MasteringMCU2_WS\RTC_AlarmA_standby_wakeup\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RTC_AlarmA_standby_wakeup.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +70,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-RTC_AlarmA.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "RTC_AlarmA.list"
+RTC_AlarmA_standby_wakeup.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "RTC_AlarmA_standby_wakeup.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) RTC_AlarmA.elf RTC_AlarmA.list RTC_AlarmA.map default.size.stdout
+	-$(RM) RTC_AlarmA_standby_wakeup.elf RTC_AlarmA_standby_wakeup.list RTC_AlarmA_standby_wakeup.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

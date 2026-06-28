@@ -50,6 +50,37 @@ int main(void)
   UART2_Init();
   RTC_Init();
 
+  //Enable clock for PWR Controller block
+  __HAL_RCC_PWR_CLK_ENABLE();
+
+  if(__HAL_PWR_GET_FLAG(PWR_FLAG_SB) != RESET)
+  {
+    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
+    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+    __HAL_RTC_ALARM_CLEAR_FLAG(&hrtc,RTC_FLAG_ALRAF);
+
+    printmsg("Woke up from standby mode\r\n");
+
+    RTC_TimeTypeDef  RTC_TimeRead;
+    RTC_DateTypeDef RTC_DateRead;
+
+    HAL_RTC_GetTime(&hrtc,&RTC_TimeRead,RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc,&RTC_DateRead,RTC_FORMAT_BIN);
+
+    printmsg("Current Time is : %02d:%02d:%02d\r\n",RTC_TimeRead.Hours,\
+    RTC_TimeRead.Minutes,RTC_TimeRead.Seconds);
+
+    //Buzzer and LED Code
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_8,GPIO_PIN_SET);
+    HAL_Delay(2000);
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_8,GPIO_PIN_RESET);
+  }
+
+  printmsg("This is RTC Alarm Test program\r\n");
+
+
   printmsg("This is RTC calendar Test program\r\n");
 
   while(1);
@@ -209,9 +240,12 @@ void RTC_CalendarConfig(void)
 	RTC_TimeTypeDef rtc_timeInit;
 	RTC_DateTypeDef rtc_dateInit;
 
-	rtc_timeInit.Hours = 12;
-	rtc_timeInit.Minutes = 45;
-	rtc_timeInit.Seconds = 00;
+	memset(&rtc_timeInit, 0, sizeof(rtc_timeInit));
+	memset(&rtc_dateInit, 0, sizeof(rtc_dateInit));
+
+	rtc_timeInit.Hours = 23;
+	rtc_timeInit.Minutes = 15;
+	rtc_timeInit.Seconds = 20;
 	//rtc_timeInit.TimeFormat = RTC_HOURFORMAT12_PM;
 
 	if (HAL_RTC_SetTime(&hrtc, &rtc_timeInit, RTC_FORMAT_BIN)!=HAL_OK)
@@ -260,9 +294,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	printmsg("TIME: %02d:%02d:%02d %s\r\n", current_time.Hours, current_time.Minutes, current_time.Seconds, cur_time_format);
 	printmsg("DATE: %02d/%2d/%2d <%s>\r\n", current_date.Date, current_date.Month, 2000 + current_date.Year, get_dayofweek(current_date.WeekDay));
 
+	//make sure that WUF and RTC alarm A flag are cleared
+	__HAL_RTC_ALARM_CLEAR_FLAG(&hrtc,RTC_FLAG_ALRAF);
+	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 	RTC_AlarmConfig();
 
+	printmsg("Went to STANDBY mode\r\n");
+
+	//Go to standby mode
+	HAL_PWR_EnterSTANDBYMode();
 }
 
 void RTC_AlarmConfig(void)
@@ -271,9 +312,10 @@ void RTC_AlarmConfig(void)
 	memset(&rtc_alarmAset, 0, sizeof(rtc_alarmAset));
 	//xx:45:09
 	rtc_alarmAset.Alarm = RTC_ALARM_A;
-	rtc_alarmAset.AlarmTime.Minutes = 45;
-	rtc_alarmAset.AlarmTime.Seconds = 9;
-	rtc_alarmAset.AlarmMask = RTC_ALARMMASK_HOURS | RTC_ALARMMASK_DATEWEEKDAY;
+	rtc_alarmAset.AlarmTime.Hours = 23;
+	rtc_alarmAset.AlarmTime.Minutes = 15;
+	rtc_alarmAset.AlarmTime.Seconds = 30;
+	rtc_alarmAset.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY;
 	rtc_alarmAset.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_NONE;
 	if (HAL_RTC_SetAlarm_IT(&hrtc, &rtc_alarmAset, RTC_FORMAT_BIN) != HAL_OK)
 	{
@@ -285,9 +327,7 @@ void RTC_AlarmConfig(void)
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 {
 	printmsg("Alarm triggered\r\n");
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-	HAL_Delay(2000); // it is important that the priority of the RTC_Alarm_IRQn is lower than systick o.w. the delay cannot preempt the RTC_Alarm_IRQn
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+
 }
 
 char* get_dayofweek(uint8_t number)
